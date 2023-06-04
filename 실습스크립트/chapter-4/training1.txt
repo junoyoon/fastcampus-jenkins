@@ -1,0 +1,110 @@
+# 자바 설치
+apt-get update
+apt-get install openjdk-11-jdk
+docker run --name hello2 -d -v /var/run/docker.sock:/var/run/docker.sock linux-container
+
+# install docker in docker
+apt-get install -y lsb-release
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo   "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" |  tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update
+apt-get install -y docker-ce-cli
+
+# alphine linux 기반
+https://docs.linuxserver.io/images/docker-openssh-server
+
+docker run -it --name=openssh-server -e PUBLIC_KEY_FILE=/pubkey/pub.key -p 2222:2222 -v /var/run/docker.sock:/var/run/docker.sock  -v /Users/rentalhub/pubkey:/pubkey  -e USER_NAME=user  lscr.io/linuxserver/openssh-server:latest
+apk add --update openjdk11 docker
+ssh -i ~/pubkey/private.key -p 2222 user@localhost
+
+docker run --rm -it --entrypoint /keygen.sh linuxserver/openssh-server
+vi ~/.ssh/practice-private.key
+vi ~/.ssh/practice-public.key
+chmod 400 ~/.ssh/practice-private.key
+
+docker network create practice
+
+docker run -d --name=operation \
+     -e PUBLIC_KEY_FILE=/key/practice-public.key \
+     -p 2222:2222 -p 80:80 \
+     -v /var/run/docker.sock:/var/run/docker.sock  \
+     -v ~/.ssh/:/key \
+     -e SUDO_ACCESS=true \
+     -e USER_NAME=user  \
+     --hostname=operation \
+     --network=practice \
+     lscr.io/linuxserver/openssh-server:latest
+
+ssh -i ~/.ssh/practice-private.key -p 2222 user@localhost
+exit
+touch test.txt
+scp -i ~/.ssh/practice-private.key -P 2222 ww.txt user@localhost:/config/test.txt
+
+docker exec operation apk add --update haproxy cronie docker git
+docker exec operation bash -c 'crond; haproxy -D -f /etc/haproxy/haproxy.cfg'
+docker run -d --name=server_1 \
+     -e PUBLIC_KEY_FILE=/key/practice-public.key \
+     -p 12222:2222 -p 18080:8080 \
+     -v /var/run/docker.sock:/var/run/docker.sock  \
+     -v ~/.ssh:/key \
+     -e SUDO_ACCESS=true \
+     -e USER_NAME=user  \
+     --hostname=server_1 \
+     --network=practice \
+     lscr.io/linuxserver/openssh-server:latest
+
+ssh -i ~/.ssh/practice-private.key -p 12222 user@localhost
+
+docker exec server_1 apk add --update openjdk11 docker nginx python
+
+docker run -d --name=server_2 \
+     -e PUBLIC_KEY_FILE=/key/practice-public.key \
+     -p 22222:2222 -p 28080:8080 \
+     -v /var/run/docker.sock:/var/run/docker.sock  \
+     -v ~/.ssh:/key \
+     -e SUDO_ACCESS=true \
+     -e USER_NAME=user  \
+     --hostname=server_2 \
+     --network=practice \
+     lscr.io/linuxserver/openssh-server:latest
+
+docker exec server_2 apk add --update openjdk11 docker nginx python
+
+docker run -d --name=server_2 -e PUBLIC_KEY_FILE=/pubkey/pub.key -p 2224:2222 -v /var/run/docker.sock:/var/run/docker.sock  -e SUDO_ACCESS=true -v /Users/rentalhub/pubkey:/pubkey  -e USER_NAME=user  --network=practice lscr.io/linuxserver/openssh-server:latest
+
+
+# 현재 PC IP
+# mac
+ipconfig getifaddr en0
+# window
+
+
+# jenkins docker 로 실행하기
+docker run -p 8080:8080 -p 50000:50000 jenkins
+
+--restart=on-failure
+docker run -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts-jdk11
+
+
+Folders
+OWASP Markup Formatter
+Build Timeout
+Credentials Binding
+Timestamper
+Workspace Cleanup
+Ant
+Gradle
+Pipeline
+GitHub Branch Source
+Pipeline: GitHub Groovy Libraries
+Pipeline: Stage View
+Git
+SSH Build Agents
+Matrix Authorization Strategy
+PAM Authentication
+LDAP
+Email Extension
+Mailer

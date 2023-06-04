@@ -1,0 +1,63 @@
+https://github.com/junoyoon/fastcampus-jenkins
+를 본인의 계정으로 Fork
+
+# operation container 로 접근후 해당 repo 를 clone
+
+docker exec -it operation bash
+git clone https://github.com/본인계정명/fastcampus-jenkins.git
+cd fastcampus-jenkins
+ls -al
+
+# cron 으로 실행할 스크립트 준비
+# 다음 파일을 run.sh 로 생성
+vi /fastcampus-jenkins/run.sh
+----
+
+#!/bin/bash
+git fetch --force origin
+git diff ..origin/main --exit-code
+ret=$?
+if [ $ret -eq 0 ]
+then
+    echo "no changes"
+    exit 0
+fi
+
+echo "changed"
+git pull -f
+
+echo "building"
+./build.sh
+ret=$?
+if [ $ret -ne 0 ]
+then
+    echo "build failed"
+    exit -1
+fi
+echo "successfully built"
+
+echo "deploying"
+./deploy.sh
+ret=$?
+if [ $ret -eq 0 ]
+then
+    echo "deploy failed"
+    exit -1
+fi
+
+echo "successfully deployed"
+---
+
+# 이 파일을 실행 가능 하도록 변경
+chmod 755 run.sh
+
+# 실행해 봄
+/fastcampus-jenkins/run.sh
+
+> no change
+
+# build.sh 생성
+----
+
+./gradle build
+

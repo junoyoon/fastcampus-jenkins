@@ -1,0 +1,20 @@
+* Jenkins job 생성
+  - Freestyle job 이름 : hello-world
+
+  - Git 소스 URL 지정
+    - https://github.com/[포크한 계정]/fastcampus-jenkins.git
+
+  - Git Branch 지정
+    - origin/main
+
+  - 빌드 스크립트 추가
+
+  cd projects/spring-app
+  ./gradlew build
+
+  - 빌드 실행하여 결과 확인
+  - 빌드 유발 > Build Periodically  추가
+    - * * * * *
+  - 빌드 결과 확인후 빌드 트리거 제거
+
+

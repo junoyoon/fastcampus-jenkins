@@ -1,0 +1,36 @@
+* 실습 준비
+  - Subversion 플러그인 설치
+  - 신규 Jenkins Job 생성
+    - FreeStyle Job - practice1
+  - Github 리포 Fork
+    - 기반 리포 https://github.com/junoyoon/fastcampus-jenkins
+    - 각자의 github 계정으로 Fork
+
+* Github HTTL URL 설정
+  - Git 소스 URL 지정
+    - https://github.com/[포크한 계정]/fastcampus-jenkins.git
+  - 브랜치 설정
+    - */main
+  - 빌드하여 workspace 확인
+
+* Github SSH URL 설정
+  - Git 소스 URL (ssh) 지정
+    - git@github.com:[포크한 계정]/fastcampus-jenkins.git
+  - Private Key 생성후 credential 추가
+    - key 생성 - ssh-keygen -t ed25519 -C "각자의email"
+    - github 에 public key 등록
+  - 빌드하여 Host 미등록으로 인한 에러 발생 확인
+  - global security 의
+    Git Host Key Verification Configuration 에
+    Accept first connection 설정
+  - 빌드하여 정상 동작 확인
+
+* Repo 를 2개 설정하여 다른 폴더로 체크아웃
+  - Multiple SCM Plugin 설치
+  - Git 을 두개 추가하고 SSH URL 을 두개에 설정
+  - Additional Behavior > Check out to a sub-directory
+  - 하나는 repo1 폴더로, 다른 하나는 repo2 폴더로
+
+* Repo 중 특정 폴더만 체크아웃
+  - Additional Behavior > Sparse Checkout paths
+  - projects/spring-app 를 지정

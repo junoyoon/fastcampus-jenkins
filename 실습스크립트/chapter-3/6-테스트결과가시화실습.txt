@@ -1,0 +1,24 @@
+* 테스트 리포트 가시화 추가
+  - workspace 내의 test 결과 출력되는 위치 확인
+  - 빌드후 조치 > Publish Junit test result report 추가
+    * Test report XMLs 에 **/test/TEST-*.xml 추가
+  - 빌드후 테스트 결과 확인
+
+* 테스트 커버리지 가시화 추가
+  - Jacoco 플러그인 추가
+  - github 에 가서 projects/spring-app/build.gradle 파일을 수정하여
+    // jacoco 라는 부분을 uncomment
+  - 빌드후 조치 > Record JaCoCo coverage report 추가
+    - Path to source directories 의 **/src/main/java 를 **/src/main/kotlin 로 변경
+  - 빌드후 커버리지 출력 결과 확인
+
+* 정적분석 가시화 추가
+  - Warnings Next Generation 플러그인 추가
+  - github 에 가서 projects/spring-app/build.gradle 파일을 수정하여
+    // import org.jlleitschuh.gradle.ktlint.reporter.ReporterType 와
+    // configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> 이후를 uncomment
+  - 빌드후 조치 > Record compiler warnings and static analysis results 추가
+    - Tool : ktlint
+    - Report File Pattern : **/reports/ktlint/**/*.xml
+    - 고급 > Enable recording for failed build 추가
+  - 빌드후 정적분석 결과 확인

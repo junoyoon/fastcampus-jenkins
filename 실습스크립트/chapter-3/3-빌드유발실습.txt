@@ -1,0 +1,18 @@
+* 빌드 유발 > Build Periodically 설정
+  - * * * * * 지정
+  - 현재 시간을 확인하여 해당 시점에 동작 하도록 설정
+  - 빌드 수행 확인
+
+* 빌드 유발 > Poll SCM 설정
+  - * * * * * 지정
+  - 빌드가 동작 하지 않음을 확인
+  - Github Repo 에 변경 커밋 추가
+  - 빌드 수행 확인
+
+* 빌드 유발 > 빌드를 원격으로 유발 설정
+  - Authentication Token 에 build 토큰 설정
+  - curl http://localhost:8080/job/practice1/build?token=build 호출
+  - 인증 에러 확인
+  - 계정 > 설정 으로 이동 하여 API Token 발급
+  - curl --user admin:토큰 http://localhost:8080/job/practice1/build?token=build 호출
+  - 빌드 실행 확인

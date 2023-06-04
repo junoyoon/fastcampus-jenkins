@@ -1,0 +1,48 @@
+* 빌드 스텝 > Execute shell 추가
+  echo $WORKSPACE
+  echo $BUILD_NUMBER
+  echo $JOB_URL
+  출력하여 환경 변수 확인
+
+* 빌드 스텝 > Execute shell 을 하나더 추가하여 gradle 빌드 수행
+  cd projects/spring-app
+  ./gradlew build
+
+* 빌드 스텝 > Invoke Gradle Wrapper 를 추가하여 빌드
+  - Wrapper location - projects/spring-app/
+  - Task : build
+  - Root Build script : projects/spring-app/
+  - 빌드 로그 확인하여 colorize 된 것을 확인
+
+* 환경 변수 출력 Step 과 빌드 Step 을 서로 위치 변경하여 실행
+
+* 빌드 스텝 > Execute shell 을 추가하여 ssh 로 파일 전송
+
+  chmod 400 /key/private.key
+  scp -i /key/private.key -P 2222 \
+       ${WORKSPACE}/projects/spring-app/build/libs/demo-0.0.1-SNAPSHOT.jar \
+       user@server_1:/config/
+
+  - 만약 server_1 이 안 떠 있다면 다음 docker 명령을 PC 에서 실행후 다시 빌드 진행
+
+  docker run -d --name=server_1 \
+       -e PUBLIC_KEY_FILE=/key/public.key \
+       -p 12222:2222 -p 18080:8080 \
+       -v /var/run/docker.sock:/var/run/docker.sock  \
+       -v ~/projects/key:/key \
+       -e SUDO_ACCESS=true \
+       -e USER_NAME=user  \
+       --hostname=server_1 \
+       --network=projects \
+       lscr.io/linuxserver/openssh-server:latest
+
+* 빌드 스텝 > Execute shell 을 추가하여 userContent 로 파일 copy
+
+    cp ${WORKSPACE}/projects/spring-app/README.md ${JENKINS_HOME}/userContent/
+
+  - 빌드 실행후 다음 URL 로 접근하여 확인
+
+    http://localhost:8080/userContent/README.md
+
+* 불필요한 ANSI character 제거
+  - --console=plain 옵션을 gradle 빌드 에 추가

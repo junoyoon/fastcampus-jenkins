@@ -1,0 +1,9 @@
+ docker.io
+
+docker run   \
+        -p 5000:599
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v ${HOME}/.jenkins3:/var/jenkins jenkins/jenkins:lts-jdk17
+docker exec -it --user root jenkins apt-get update
+docker exec -it --user root jenkins apt-get install docker.io
+
