@@ -1,0 +1,47 @@
+* 글로벌 View 생성
+  - Dashboard > 가운데 + 클릭
+    - 조회명 : practice1 view
+    - Type : List View 선택
+  - Filter build queue 선택
+  - Filter build executors
+  - 정규식을 이용한 작업 목록 필터 체크
+    - 정규식 : ^practice1.* 입력
+  - 결과 확인
+* 조회 테이블 수정
+  - 보기 수정 클릭
+  - Number of static analysis issues 의 X 클릭
+  - 컬럼 추가 : Git Branches
+
+* My View 생성
+  - Dashboard > My View > 가운데 + 클릭
+    - View name : prbuilder view
+    - Type : List View 선택
+  - Filter build queue 선택
+  - Filter build executors
+  - 작업
+    - prbuilder 선택
+    - number of static analysis issues 삭제
+  - 결과 확인
+
+* View 컬럼 확장
+  - Extra Columns 플러그인 설치
+  - http://localhost:8080/view/practice1-build/ 로 이동
+    - 보기 수정
+    - 컬럼 추가
+      - Periodic Build Trigger
+      - Last Configuration Modification
+      - Last Build Node
+      - Last/Current Build Console Output
+    - 결과 확인
+    - 보기 수정
+    - 순서 조정
+      - 빌드 버튼을 맨 마지막으로 이동
+    - 결과 확인
+
+* Dashboard View 확장
+  - Dashboard View 플러그인 설치
+  - 보기 추가
+    - 조회명 : MyView
+    - Type : Dashboard 선택
+    - 포틀렛 추가
+  - View 확인

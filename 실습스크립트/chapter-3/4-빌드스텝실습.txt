@@ -29,11 +29,11 @@
        -e PUBLIC_KEY_FILE=/key/public.key \
        -p 12222:2222 -p 18080:8080 \
        -v /var/run/docker.sock:/var/run/docker.sock  \
-       -v ~/projects/key:/key \
+       -v ~/practice/key:/key \
        -e SUDO_ACCESS=true \
        -e USER_NAME=user  \
        --hostname=server_1 \
-       --network=projects \
+       --network=practice \
        lscr.io/linuxserver/openssh-server:latest
 
 * 빌드 스텝 > Execute shell 을 추가하여 userContent 로 파일 copy

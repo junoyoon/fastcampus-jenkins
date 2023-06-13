@@ -2,25 +2,27 @@
   - 이미 docker 를 설치 했다고 가정
   - 만약 projects docker network 이 없다면 생성 (chapter1에서 만들었었음)
 
-    docker network create projects
+    docker network create practice
 
 * jenkins docker container 생성
 
     docker run -d --name jenkins --hostname=jenkins \
                   -p 8080:8080 -p 50000:50000 \
-                  -v ${HOME}/projects/key:/key \
+                  -e TZ=Asia/Seoul \
+                  -v ${HOME}/practice/key:/key \
                   -v ${HOME}/.jenkins:/var/jenkins_home \
-                  --network projects \
+                  --network practice \
                   jenkins/jenkins:lts-jdk17
 
 * jenkins docker container 를 재시작 가능하도록 변경
 
     docker run -d --name jenkins --hostname=jenkins \
                   --restart=on-failure \
+                  -e TZ=Asia/Seoul \
                   -p 8080:8080 -p 50000:50000 \
-                  -v ${HOME}/projects/key:/key \
+                  -v ${HOME}/practice/key:/key \
                   -v ${HOME}/.jenkins:/var/jenkins_home \
-                  --network projects \
+                  --network practice \
                   jenkins/jenkins:lts-jdk17
 
 * jenkins docker 컨테이너 내에서 docker 를 실행 가능하도록
@@ -29,18 +31,19 @@
 
     docker run -d --name jenkins --hostname=jenkins \
                   --restart=on-failure \
+                  -e TZ=Asia/Seoul \
                   -p 8080:8080 -p 50000:50000 \
-                  -v ${HOME}/projects/key:/key \
+                  -v ${HOME}/practice/key:/key \
                   -v ${HOME}/.jenkins:/var/jenkins_home \
                   -v /var/run/docker.sock:/var/run/docker.sock \
-                  --network projects \
+                  --network practice \
                   --user root \
                   jenkins/jenkins:lts-jdk17
 
   - jenkins docker container 내부에 docker 설치
 
-    docker exec -it jenkins apt-get update
-    docker exec -it jenkins apt-get install -y docker.io
+    docker exec --user root  -it jenkins apt-get update
+    docker exec --user root  -it jenkins apt-get install -y docker.io
 
   - 지금까지 설정한 것을 향후에도 재사용 가능하도록 jenkins image 로 커밋
     docker commit jenkins jenkins/jenkins:my-version
@@ -49,11 +52,12 @@
     docker rm -f jenkins
     docker run -d --name jenkins --hostname=jenkins \
                   --restart=on-failure \
+                  -e TZ=Asia/Seoul \
                   -p 8080:8080 -p 50000:50000 \
-                  -v ${HOME}/projects/key:/key \
+                  -v ${HOME}/practice/key:/key \
                   -v ${HOME}/.jenkins:/var/jenkins_home  \
                   -v /var/run/docker.sock:/var/run/docker.sock \
-                  --network projects \
+                  --network practice \
                   --user root \
                   jenkins/jenkins:my-version
 

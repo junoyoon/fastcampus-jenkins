@@ -1,0 +1,30 @@
+* 배포를 정말 실행할 것인지 확인 하는 단계 추가
+  - practice1-deploy 구성 > General > 고급 > 이 변수는 매개변수가 있습니다. 체크
+    - Boolean Parameter
+      - Name : ARE_YOU_SURE
+      - Set By Default
+      - Description : 정말 배포하실 건가요?
+  - 빌드 스텝 > shell 에 다음을 추가
+        if [ "$ARE_YOU_SURE" != 'true' ]
+        then
+            echo "The build is executed mistakenly"
+            exit 1
+        fi
+  - 빌드 실행후, 상황 확인
+
+* 앞선 배포에서의 문제점
+  - 롤백 위해 특정 빌드를 배포할 수 없음
+
+* 특정 빌드를 배포할 수 있도록 설정 수정
+  - practice1-deploy > 구성 > General > 매개 변수 추가
+    - Build selector for Copy Artifact
+      - Name : BUILD_SELECTOR
+      - Default Selector : Upstream build that triggered this job
+      - Use "Last successful build" as fallback 체크
+      - Description : 배포할 practice1 빌드. 특정 빌드를 선택하시고 싶다면, Specific build 를 선택후, 빌드 번호를 입력하세요.
+
+  - practice1-deploy > 구성 > 빌드 스텝 > Copy artifacts from another project 수정
+    - Which build : Specified by a build parameter
+    - Parameter name : BUILD_SELECTOR
+
+  - 빌드후 확인

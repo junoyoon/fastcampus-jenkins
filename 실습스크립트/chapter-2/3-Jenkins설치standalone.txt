@@ -1,26 +1,29 @@
-* homebrew 설치
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-* open jdk 설치
-brew install openjdk@17
+* openjdk 설치
+  - 맥 사용자
+    - homebrew 설치
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    - open jdk 설치
+      brew install openjdk@17
+  - 리눅스 사용자
+    - 우분투 : https://languagestory.tistory.com/154 참고
 
 * jenkins 바이너리 다운로드
-mkdir ~/projects/
-cd ~/projects
-curl -OL https://get.jenkins.io/war-stable/2.401.1/jenkins.war
+    mkdir ~/practice/
+    cd ~/practice
+    curl -OL https://get.jenkins.io/war-stable/2.401.1/jenkins.war
 
 * jenkins 실행
-java -jar jenkins.war --httpPort=8080
+    java -jar jenkins.war --httpPort=8080
 
 * jenkins 중지
-ctrl+C
+    ctrl+C
 
 * JENKINS_HOME 변경후 재시작
-export JENKINS_HOME=~/projects/jenkins_home
-java -jar jenkins.war --httpPort=8080
+    export JENKINS_HOME=~/practice/jenkins_home
+    java -jar jenkins.war --httpPort=8080
 
 # jenkins 재시작
-curl http://localhost:8080/restart
+    curl http://localhost:8080/restart
 
 # 환경 변수 삭제
-unset JENKINS_HOME
+    unset JENKINS_HOME

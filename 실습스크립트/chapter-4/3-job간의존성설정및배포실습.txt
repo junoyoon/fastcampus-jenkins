@@ -1,0 +1,39 @@
+* deploy 전용 job 생성
+    - practice1-deploy FreeStyle job 생성
+
+* 기존 practice1 을 practice1-build 로 리네임
+    - practice1 > Rename
+      - New Name : practice1-build
+
+* practice1-build 에서 SSH 전송 제거 및 practice1-deploy 연결
+    - practice1-build > 빌드 구성 > 쉘 수정
+      # 빌드 결과를 ${WORKSPACE}/deploy 로 복제 shell 추가
+      mkdir deploy
+      cp projects/spring-app/build/libs/*-SNAPSHOT.jar deploy/
+    - 빌드후 조치 > Build other projects 추가
+      Projects to build : practice1-deploy
+
+* deploy 전용 job에 신규 SSH 전송 deploy 추가
+    - practice1-deploy FreeStyle job 생성
+      - Job > 빌드후 조치 > Send build artifact over SSH 추가
+        - Name: server_1
+        - Source files: ${JENKINS_HOME}/workspace/practice1-build/projects/spring-app/deploy/*-SNAPSHOT.jar
+        - Remove prefix : ${JENKINS_HOME}/workspace/practice1-build/projects/spring-app/deploy
+
+* 위 방식의 문제점
+  - practice1-build 의 workspace 가 remote node 에 있을 수 있음 (agent 사용시)
+  - deploy job 실행도중  practice1-build 가 동시 빌드되어, 원하지 않는 build 결과가 배포될 가능성 있음
+  - deploy job 만 실행시, ${JENKINS_HOME}/workspace/practice1-build/projects/spring-app/deploy/ 에 deploy 할 내용이 없을 수 있음
+
+* Copy Artifacts 플러그인으로 Artifact 를 복제
+  - Copy Artifacts 플러그인 설치
+  - practice2 > 구성 > 빌드 스텝 > Copy artifacts from another project 추가
+    - Project name : practice1-build
+    - Which build : Upstream build that triggered this job
+    - Artifact to copy : projects/spring-app/build/libs/*
+    - Target directory : deploy
+    - Flatten directories : 체크
+  - Job > 빌드후 조치 > Send build artifact over SSH 수정
+    - Name: server_1
+    - Source files: deploy/*-SNAPSHOT.jar
+    - Remove prefix : deploy

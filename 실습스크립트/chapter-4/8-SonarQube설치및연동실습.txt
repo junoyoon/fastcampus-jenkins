@@ -1,0 +1,54 @@
+* SonarCube 설치
+  - 볼륨 생성
+    docker volume create --name sonarqube_data
+    docker volume create --name sonarqube_logs
+    docker volume create --name sonarqube_extensions
+  - SonarCube 컨테이너 실행
+    docker run --rm -d \
+      --name sonarqube \
+      --hostname sonarqube \
+      --network practice \
+      -e TZ=Asia/Seoul \
+      -p 9000:9000 \
+      -v sonarqube_data:/opt/sonarqube/data \
+      -v sonarqube_logs:/opt/sonarqube/logs \
+      -v sonarqube_extensions:/opt/sonarqube/extensions \
+    sonarqube:lts-community
+
+* SonarQube 프로젝트 및 접근 키 생성
+  - 프로젝트 생성
+    - http://localhost:9000/projects
+    - Create Project > Manually
+      - Project display name : my_project
+      - Set up 클릭
+  - 접근키 생성
+    http://localhost:9000/account/security
+    - Name : access_key
+    - Type : User Token
+    - Generate 버튼클릭 및 생성된 접근키 기억
+
+* SonarQube Scanner for Jenkins 플러그인 설치
+
+* Jenkins SonarQube 전역 설정
+  - Jenkins 관리 > System > SonarQube 서버
+    - Name : SonarQube
+    - Server URL : http://sonarqube:9000
+    - Server authentication token > Add > Secret Text
+      - 생성한 SonarQube 접근 키 입력
+    - 저장
+  - Jenkins 관리 > Tools > SonarQube Scanner
+    - Name : scanner
+    - Install automatically 체크
+    - 최신 버전 선택
+    - 저장
+
+* Jenkins SonarQube Job 설정
+  - Job설정 > 빌드스텝 > Add > Execute SonarQube Scanner 선택
+    - Analysis properties
+    sonar.projectKey=my_project
+    sonar.projectBaseDir=${WORKSPACE}/projects/spring-app
+    sonar.login=생성한접근키입력
+
+* Jenkins Job 빌드 및 결과 확인
+  - 빌드 & 빌드 로그 확인
+  - http://localhost:9000/dashboard?id=my_project

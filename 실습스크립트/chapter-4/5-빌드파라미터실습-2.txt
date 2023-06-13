@@ -1,0 +1,69 @@
+* practice1 에 선택적으로 브랜치를 선택하여 빌드 & 배포 할 수 있게 하기
+  - practice1-build > 구성 > General > 매개 변수 추가 > Git Parameter
+    - Name : BRANCH
+    - Description : 배포할 브랜치를 선택합니다.
+    - Parameter Type : Branch
+    - Default Value : origin/main
+    - Sort Mode : ASCENDING_SMART
+    - Selected Value : NONE
+    - Quick Filter 체크
+    - List Size : 3
+  - 소스코드 관리 > Git
+    - Branch Specifier : ${BRANCH}
+  - 빌드후 확인
+
+* 무슨 브랜치가 빌드되는지 불확실한 문제 해결
+  - Active Parameter Plugin 설치
+  - practice1-build > 구성 > General > 매개 변수 추가 > Active Choices Reactive Parameter
+    - Name : BRANCH_TO_BUILD
+    - Groovy Script : 체크
+    - Groovy Script 에 다음 입력
+        if (BRANCH == "") {
+            return [ "origin/main:selected" ]
+        } else {
+            return [ "$BRANCH_SELECT:selected" ]
+        }
+    - Use Groovy Sandbox 클릭
+    - Description : 실제 빌드될 브랜치 입니다.
+    - Choice Type : Radio Buttons
+    - Referenced parameter : BRANCH
+  - 소스코드 관리 > Git
+    - Branch Specifier : ${BRANCH_TO_BUILD}
+  - 빌드후 확인
+
+* 배포를 제외한 빌드만을 실행시킬 수 있도록 수정
+  - Parameterized Trigger 플러그인 추가
+  - practice1-build 구성 > General > 고급 > 이 변수는 매개변수가 있습니다. 체크
+    - Boolean Parameter
+      - Name : INCLUDE_DEPLOY
+      - Set By Default
+      - Description : 배포도 하실 경우, 체크합니다.
+
+    - 빌드후 조치 > Build other projects 제거
+    - 빌드후 조치 > Trigger parameterized build on other projects 추가
+      - Projects to build : practice1-deploy
+      - Add Parameter > Predefined parameters
+        ARE_YOU_SURE=${NCLUDE_DEPLOY}
+        입력
+
+  - 빌드 결과 확인
+
+* 밤에는 배포 못하도록 경고하기
+  - practice1-build 구성 > General > 고급 > 이 변수는 매개변수가 있습니다. > 매개 변수 추가
+    - Active Choices Parameter
+      - Name : BUILD_AT_NIGHT
+      - Groovy Script
+
+        import java.util.Date
+        def now = new Date()
+        def hour = now.hours
+
+        if (hour >= 21 || hour < 9) {
+            return [ "그래도 진행합니다." ]
+        } else {
+            return [ ]
+        }
+     - Use Groovy Sandbox 체크
+     - Choice TYpe : Check Boxes
+  - 빌드 확인
+

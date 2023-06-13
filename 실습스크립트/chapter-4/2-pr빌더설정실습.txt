@@ -1,0 +1,88 @@
+* Github Pull Request Builder 플러그인을 Jenkins 에 설치
+* 로컬 PC 에 Jenkins 를 깔고 실행가기 때문에 github webhook 을 받을 수 없는 문제 해결해야함
+* webhook relay 설치
+  * https://webhookrelay.com 로 이동후, 가입
+  * https://my.webhookrelay.com/ 의 가운 Internal URL 의 CONFIGURE 선택
+    * Destination URL : http://jenkins:8080/ghprbhook/
+    * Continue 클릭
+    * Start agent > Docker 선택 > Generate Auth Token 선택후 명령어 복사
+
+    docker run -d --network host webhookrelay/webhookrelayd:latest \
+      -k [키] \
+      -s [시클릿] \
+      -b [포워더명]
+
+    * 이 명령을 조금 수정하여 projects 네트웍에 접근 가능하도록 수정
+    docker run -d \
+      --name webhook-relay \
+      --network practice \
+      webhookrelay/webhookrelayd:latest \
+      -k [키] \
+      -s [시클릿] \
+      -b [포워더명]
+
+    - 터미널에서 수행하여, agent 잘 붙었는지 확인
+    - Start Forwarding 선택
+    - Listening On 우측의 URL 기억
+      - https://[고유키].hooks.webhookrelay.com
+
+* Github repo 에 WebHook 설정
+  - https://github.com/[각자의 계정]/fastcampus-jenkins/settings/hooks 으로 이동
+  - Add Hook 입력
+    - Payload URL : https://[고유키].hooks.webhookrelay.com
+    - Content Type : application/json
+    - Let me select individual events 선택후
+      - Issue comments / Pull Request / Push 선택
+    - Add webhook 사용하여 저장
+
+* Github Api Token 생성
+  - https://github.com/settings/tokens > generate new token (classic) 클릭
+  - Note : jenkins
+  - Expiration : 30 days
+  - Select Scope : repo 선택
+  - Generate Token 클릭후, 생성된 토큰 기억
+
+* Github Pull Request builder Global 설정
+  - jenkins 관리 > System > Github Pull Request Builder
+  - Github Server API URL : https://api.github.com
+  - Credentials > Add
+    - Kind : Secret text 선택
+    - Secret : 위에서 생성한 Github API Token 입력
+    - Description : Github Token 입력
+  - Credentials > Github Token 선택
+  - Test Credentials 를 통해 Toekn 확인
+  - Admin list 에 본인 github ID 입력
+
+* Jenkins PR builder 용 Job 설정
+  - Dashboard > 새로운 Item
+    * Item Name : prbuilder 입력
+    * Copy from : practice1
+  - 소스코드 관리 > Git > Repositories > 고급
+    - Refspec :  +refs/pull/*:refs/remotes/origin/pr/*
+  - Branch Specifier : ${sha1}
+    - 참고로 ${sha1}는 현재 PR이 머지대상에 머지되었을때를 가정한 커밋 / ${ghprbActualCommit} 는 현재 PR 커밋
+  - 빌드 유발
+    - Github Pull Request Builder 선택
+    - Use Github hooks for build trigger 선택
+
+* Github PR 생성
+  - https://github.com/[각자의 계정]/fastcampus-jenkins/edit/main/README.md 으로 이동
+  - 파일 변경후, Commit Change 클릭
+  - Create a new branch for this commit and start a pull request 선택후 Propose changes 클릭
+  - Create Pull Request 클릭 > Create Pull request 클릭
+
+* Jenkins 에서 빌드 현황 확인
+  - prbuilder 동작
+  - Github 의 PR의 하단 동작 확인
+
+* Jenkins 에 comment 설정 추가
+  - Job 설정 > 소스코드 관리 > Github Pull Request Builder > 고급
+    - Trigger phrase: test this 입력
+  - Trigger Setup 선택
+    - Commit Status Context : jenkins 입력
+  - 하단의 빌드 스텝 쉘에서 다음 입력
+    echo $ghprbCommentBody
+    exit 1
+  - PR 에 커멘트로 test this 입력
+  - Github 의 PR의 하단 동작 확인
+  - Jenkins 콘솔 확인

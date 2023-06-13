@@ -6,7 +6,7 @@
     - 기반 리포 https://github.com/junoyoon/fastcampus-jenkins
     - 각자의 github 계정으로 Fork
 
-* Github HTTL URL 설정
+* Github HTTP URL 설정
   - Git 소스 URL 지정
     - https://github.com/[포크한 계정]/fastcampus-jenkins.git
   - 브랜치 설정
