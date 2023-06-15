@@ -14,18 +14,19 @@
 
 * 무슨 브랜치가 빌드되는지 불확실한 문제 해결
   - Active Parameter Plugin 설치
-  - practice1-build > 구성 > General > 매개 변수 추가 > Active Choices Reactive Parameter
+  - practice1-build > 구성 > General > 매개 변수 추가 > Active Choices Reactive Reference Parameter
     - Name : BRANCH_TO_BUILD
     - Groovy Script : 체크
     - Groovy Script 에 다음 입력
         if (BRANCH == "") {
-            return [ "origin/main:selected" ]
+            return "origin/main"
         } else {
-            return [ "$BRANCH_SELECT:selected" ]
+            return "$BRANCH_SELECT"
         }
     - Use Groovy Sandbox 클릭
+    - Fallback Script : [ "origin/main" ]
     - Description : 실제 빌드될 브랜치 입니다.
-    - Choice Type : Radio Buttons
+    - Choice Type : Formatted HTML
     - Referenced parameter : BRANCH
   - 소스코드 관리 > Git
     - Branch Specifier : ${BRANCH_TO_BUILD}
