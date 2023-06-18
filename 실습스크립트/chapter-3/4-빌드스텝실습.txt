@@ -19,7 +19,8 @@
 * 빌드 스텝 > Execute shell 을 추가하여 ssh 로 파일 전송
 
   chmod 400 /key/private.key
-  scp -i /key/private.key -P 2222 \
+
+   -i /key/private.key -P 2222 \
        ${WORKSPACE}/projects/spring-app/build/libs/demo-0.0.1-SNAPSHOT.jar \
        user@server_1:/config/
 
@@ -38,11 +39,11 @@
 
 * 빌드 스텝 > Execute shell 을 추가하여 userContent 로 파일 copy
 
-    cp ${WORKSPACE}/projects/spring-app/README.md ${JENKINS_HOME}/userContent/
+    cp ${WORKSPACE}/projects/spring-app/README.md ${JENKINS_HOME}/userContent/README.html
 
   - 빌드 실행후 다음 URL 로 접근하여 확인
 
-    http://localhost:8080/userContent/README.md
+    http://admin:토큰@localhost:8080/userContent/README.md
 
 * 불필요한 ANSI character 제거
   - --console=plain 옵션을 gradle 빌드 에 추가

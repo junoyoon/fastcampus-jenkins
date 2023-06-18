@@ -1,7 +1,7 @@
 * Artifact Archive
   - 빌드후 조치 > Archive the artifact 추가
   - Files to archive : **/build/libs/*-SNAPSHOT.jar
-  - 빌드 정보 화면으로 이동하여 archive 된 된 것을 확인
+  - 빌드 정보 화면으로 이동하여 archive 확인
 
 * 빌드후 조치 > Send build artifact over SSH 추가
   - Publish Over SSH 플러그인 추가
@@ -15,6 +15,7 @@
     - Name: server_1
     - Source files: **/build/libs/*-SNAPSHOT.jar
     - Remove prefix : projects/spring-app/build/libs
+    -
   - 빌드 실행 및 결과 확인
     - docker exec -it server_1 bash
     - ls -al

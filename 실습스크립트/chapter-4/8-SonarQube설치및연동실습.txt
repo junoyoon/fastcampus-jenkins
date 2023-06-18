@@ -26,18 +26,27 @@
     - Name : access_key
     - Type : User Token
     - Generate 버튼클릭 및 생성된 접근키 기억
+  - Web훅 설치
+    - http://localhost:9000/admin/webhooks
+    - Name: Jenkins
+    - URL : http://jenkins:8080/sonarqube-webhook/
+    - Secret : secret 으로 입력
 
 * SonarQube Scanner for Jenkins 플러그인 설치
 
 * Jenkins SonarQube 전역 설정
   - Jenkins 관리 > System > SonarQube 서버
-    - Name : SonarQube
+    - Name : sonarqube-server
     - Server URL : http://sonarqube:9000
     - Server authentication token > Add > Secret Text
       - 생성한 SonarQube 접근 키 입력
+    - 고급 > Webhook Secret > Add > Jenkins
+      - Kind : Secret Text
+      - Secret : secret
+      - Description : SonarQube Webhook Secret
     - 저장
   - Jenkins 관리 > Tools > SonarQube Scanner
-    - Name : scanner
+    - Name : sonar-scanner
     - Install automatically 체크
     - 최신 버전 선택
     - 저장

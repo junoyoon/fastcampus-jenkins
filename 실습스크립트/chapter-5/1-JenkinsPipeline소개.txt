@@ -1,0 +1,44 @@
+* pipeline-sample pipeline 생성
+  - Dashboard > Item 생성
+    - Name : pipeline-sample
+    - Type : pipeline 선택
+
+* 하단의 Pipeline 에 다음을 입력
+
+pipeline {
+    agent any
+    stages {
+        stage("Build") {
+            steps {
+                echo "Building..."
+            }
+        }
+
+        stage("Test") {
+            steps {
+                echo "Testing..."
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                echo "Deploying..."
+            }
+        }
+    }
+}
+
+  - 저장 & 빌드 & 빌드 결과 보기
+
+* 특정 스텝부터 재시작
+  - 해당 빌드로 이동후 > Restart Build Stage > Test 선택후 실행
+  - 빌드후 실행 현항 확인
+
+* sh 커멘드 추가
+  - pipeline 스크립트 echo "Building..." 하단에 다음을 추가후 빌드 실행
+
+        sh "ls -al"
+
+* Snippet / Declarative Directive 생성 확인
+  - http://localhost:8080/pipeline-syntax
+

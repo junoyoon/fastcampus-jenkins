@@ -16,21 +16,38 @@
 * Github SSH URL 설정
   - Git 소스 URL (ssh) 지정
     - git@github.com:[포크한 계정]/fastcampus-jenkins.git
-  - Private Key 생성후 credential 추가
-    - key 생성 - ssh-keygen -t ed25519 -C "각자의email"
+  -  SSH Key 생성후 github / jenkins 에 각각 public / private key 추가
+    - key 생성
+      - ssh-keygen -t ed25519 -C "각자의email"
     - github 에 public key 등록
-  - 빌드하여 Host 미등록으로 인한 에러 발생 확인
-  - global security 의
-    Git Host Key Verification Configuration 에
-    Accept first connection 설정
+      - https://github.com/settings/ssh/new
+      - title: jenkins
+      - Key : public key 등록
+    - jenkins 에 private key 등록
+      - practice1 job 구성 > 소스 코드 관리 > Git > Credential > Add > Jenkins
+        - SSH Username with private Key 선택
+        - username : 각자의 github 계정
+        - description : github private key
+        - Private Key > Enter Directly
+        - private 키 입력
+        - 저장
+        - 계정(github private key) 항목 선택
+  - 저장 / 빌드하여 Host 미등록으로 인한 에러 발생 확인
+  - Jenkins 설정 > security > Git Host Key Verification Configuration
+    Accept first connection 선택
   - 빌드하여 정상 동작 확인
 
 * Repo 를 2개 설정하여 다른 폴더로 체크아웃
   - Multiple SCM Plugin 설치
-  - Git 을 두개 추가하고 SSH URL 을 두개에 설정
-  - Additional Behavior > Check out to a sub-directory
-  - 하나는 repo1 폴더로, 다른 하나는 repo2 폴더로
+  - practice1 job 구성 > 소스 코드 관리 > Multiple SCM > Add > Git 2회
+    - SSH URL / Credentials 를 앞 설정과 동일하게
+    - Additional Behavior > Check out to a sub-directory 를 두 repo에 모두 적용
+    - 하나는 repo1 폴더로, 다른 하나는 repo2 폴더로
+  - 빌드후 체크아웃 결과 확인
 
 * Repo 중 특정 폴더만 체크아웃
-  - Additional Behavior > Sparse Checkout paths
-  - projects/spring-app 를 지정
+  - practice1 job 구성 > 소스 코드 관리 > Git 선택
+    - SSH URL / Credentials 를 앞 설정과 동일하게
+    - Additional Behavior > Sparse Checkout paths
+    - projects/spring-app 를 지정
+  - 빌드후 체크아웃 결과 확인

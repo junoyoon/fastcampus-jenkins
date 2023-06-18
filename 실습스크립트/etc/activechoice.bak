@@ -1,0 +1,18 @@
+,
+                [
+                        $class              : 'DynamicReferenceParameter',
+                        choiceType          : 'ET_FORMATTED_HIDDEN_HTML',
+                        name                : 'BRANCH_FOR_JENKINS',
+                        referencedParameters: 'BRANCH',
+                        script              : [
+                                $class        : 'GroovyScript',
+                                script        : [
+                                        sandbox: true,
+                                        script : groovy_script_for_jenkins()
+                                ],
+                                fallbackScript: [
+                                        sandbox: true,
+                                        script : groovy_script_for_jenkins_fallback()
+                                ]
+                        ]
+                ],

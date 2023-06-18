@@ -1,0 +1,251 @@
+* 필수 syntax
+
+pipeline
+{
+    agent any
+    stages
+    {
+        stage ('stage name')
+        {
+            steps {
+                echo "hello"
+            }
+        }
+    }
+}
+
+* stages / stage
+
+pipeline {
+    agent any
+    stages {
+        stage("build") {
+            steps {
+                echo "build"
+            }
+        }
+    }
+}
+
+// stage 가 stages 를 포함하는 예제
+pipeline {
+    agent any
+    stages {
+        stage("build") {
+            stages {
+                stage("build1") {
+                    steps {
+                        echo "build1"
+                    }
+                }
+                stage("build2") {
+                    steps {
+                        echo "build2"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// stage 가 parallel 로 다수의 stage 를 실행하는 예제
+pipeline {
+    agent any
+    stages {
+        stage("build") {
+            parallel {
+                stage("build1") {
+                    steps {
+                        echo "build1"
+                    }
+                }
+                stage("build2") {
+                    steps {
+                        echo "build2"
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// 아무 에이전트나 사용
+agent any
+
+// top level 에 한해서 agent 적용 안함
+agent none
+
+// 주어진 label 을 가진 agent 사용
+agent { label 'agent-label' }
+
+// 주어진 label 을 가진 node 에 설치된 agent 사용
+agent { node { label 'node-label' } }
+
+// 주어진 label 을 가진 node 에서 docker 컨테이너로 agent 생성/사용
+agent {
+    docker {
+        image 'maven:3.9.0-eclipse-temurin-11'
+        label 'node-label'
+        args  '-v /tmp:/tmp'
+    }
+}
+
+// k8s 에 container 를 띄워서 사용
+agent {
+    kubernetes {
+        defaultContainer 'kaniko'
+        yaml         yaml '''
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    imagePullPolicy: Always
+    command:
+    - sleep
+    args:
+    - 99d
+    volumeMounts:
+      - name: aws-secret
+        mountPath: /root/.aws/
+      - name: docker-registry-config
+        mountPath: /kaniko/.docker
+  volumes:
+    - name: aws-secret
+      secret:
+        secretName: aws-secret
+    - name: docker-registry-config
+      configMap:
+        name: docker-registry-config
+'''
+}}
+
+options {
+   // 빌드를 지정한 개수만 남김
+   buildDiscarder(logRotator(numToKeepStr: '3'))
+
+   // 동시 진행되는 빌드를 막음
+   disableConcurrentBuilds()
+
+   // Github 프로젝트 URL 지정
+   githubProjectProperty(
+      displayName: '',
+      projectUrlStr: 'GITHUB 프로젝트 URL'
+   )
+
+   // 에이전트 할당시 디폴트로 진행되는 체크아웃을 하지 않음
+   skipDefaultCheckout()
+
+   // 타임아웃 지정
+   timeout(time: 1, unit: 'HOURS')
+
+   // 콘솔 아웃풋에 라인마다 타임스템프 출력
+   timestamps()
+}
+
+environments {
+   // PROJECT_NAME 환경 변수 지정
+   PROJECT_NAME = "MY PROJECT"
+
+   // sonar-scanner 의 위치를 SONAR_SCANNER 로 지정
+   SONAR_SCANNER = tool "sonar-scanner"
+
+   // Jenkins credentials 로 부터 AWS_ACCESS_KEY 를
+   // 가져와 지정
+   AWS_ACCESS_KEY = credentials("aws-access-key-id")
+}
+
+
+tools {
+   // java11로 java 설정
+   jdk 'java11'
+
+   // apache-maven-3.0.1 으로 maven 설정
+   maven 'apache-maven-3.0.1'
+
+   // gradle-8.2로 gradle 설정
+   gradle 'gradle-8.2'
+}
+
+when {
+    // groovy 코드를 사용하여 비교
+    expression { params.PLATFORM_FILTER == env.PLATFORM }
+
+    // branch 를 비교
+    branch "main"
+
+    // 하위 조건중 하나라도 만족할 경우
+    anyOf {
+        // 환경 변수 비교
+        environment name: 'DEPLOY_TO', value: 'production'
+        // SCMTrigger 에 의해 트리거링 되었을때
+        triggeredBy 'SCMTrigger'
+    }
+}
+
+
+* input
+
+    pipeline {
+        agent any
+        stages {
+            stage('Example') {
+                input {
+                    message "Should we continue?"
+                    ok "Yes, we should."
+                    submitter "alice,bob"
+                    parameters {
+                        string(name: 'PERSON', defaultValue: 'Mr Jenkins')
+                    }
+                }
+                when {
+                    not { environment name: "PERSON", value: "" }
+                }
+                steps {
+                    echo "Hello, ${PERSON}, nice to meet you."
+                }
+            }
+        }
+    }
+
+* parameters
+pipeline {
+    agent any
+    parameters {
+        string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+        text(name: 'BIOGRAPHY', defaultValue: '', description: 'Enter some information about the person')
+        booleanParam(name: 'TOGGLE', defaultValue: true, description: 'Toggle this value')
+        choice(name: 'CHOICE', choices: ['One', 'Two', 'Three'], description: 'Pick something')
+        password(name: 'PASSWORD', defaultValue: 'SECRET', description: 'Enter a password')
+    }
+    stages {
+        stage('Example') {
+            steps {
+                echo "Hello ${params.PERSON}"
+                echo "Biography: ${params.BIOGRAPHY}"
+                echo "Toggle: ${params.TOGGLE}"
+                echo "Choice: ${params.CHOICE}"
+                echo "Password: ${params.PASSWORD}"
+            }
+        }
+    }
+}
+
+* Triggers
+
+triggers {
+  // 주기적 빌드
+  cron '* * * * *'
+
+  // 주기적 변경 사항 확인후 빌드
+  pollSCM '* * * * *'
+
+  // github hook 에 의해 변경이 감지 되었을때 빌드
+  githubPush()
+
+  // 업스트림 Job 이 완료되면 빌드
+  upstream 'my-sample'
+
+  // PR builder 추가를 위해서는 작업 필요
+}

@@ -50,12 +50,12 @@
     - Secret : 위에서 생성한 Github API Token 입력
     - Description : Github Token 입력
   - Credentials > Github Token 선택
-  - Test Credentials 를 통해 Toekn 확인
+  - Test Credentials 를 통해 Token 확인
   - Admin list 에 본인 github ID 입력
 
 * Jenkins PR builder 용 Job 설정
   - Dashboard > 새로운 Item
-    * Item Name : prbuilder 입력
+    * Item Name : practice1-pr 입력
     * Copy from : practice1
   - 소스코드 관리 > Git > Repositories > 고급
     - Refspec :  +refs/pull/*:refs/remotes/origin/pr/*

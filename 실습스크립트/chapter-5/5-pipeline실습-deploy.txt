@@ -1,0 +1,130 @@
+* pipeline-deploy 초기 pipeline 구조 지정후 로그 보기
+
+pipeline {
+    // 어떠한 에이전트에서도 실행 가능함을 표현
+    agent any
+
+    /**
+    options {
+    }
+    */
+
+    /**
+    parameters {
+    }
+    */
+
+
+    // stages > stage > steps 순으로 구성
+    stages {
+        stage('Checking Deployment') {
+            steps {
+                echo "Checking Deployment"
+            }
+        }
+
+        stage('Copying from upstream') {
+            steps {
+                echo "Copying from upstream"
+            }
+        }
+
+        stage('Send to target') {
+            steps {
+                echo "Send to target"
+            }
+        }
+    }
+
+
+    // post 는 stage 마다 실행시킬 수도 있고, 전체가 stages가 완료된 다음에 실행 시킬 수도 있음
+    /*
+    post {
+        always {
+        }
+        success {
+        }
+    }
+    */
+}
+
+* option 설정 하기
+  - options 커멘트 제거후 다음 입력
+
+    options {
+        // 빌드를 5개만 유지
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+    }
+
+  - 빌드후 구성을 눌러, 어떻게 triggers 와 options 가 반영되었는지 확인하기
+
+* 파라미터 셋팅
+  - parameters { .. } 를 다음으로 교체
+
+        booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
+
+    parameters {
+        buildSelector defaultSelector: upstream(fallbackToLastSuccessful: true), description: '배포할 pipeline-build 빌드', name: 'BUILD_SELECTOR'
+    }
+
+* Upstream 에서 Artifact 가져오기
+  - stage('Copying from upstream.') { .. } 를 다음으로 교체
+
+        stage('Copying from upstream.') {
+            steps {
+                copyArtifacts filter: 'projects/spring-app/build/libs/*', fingerprintArtifacts: true, flatten: true, projectName: 'pipeline', selector: buildParameter('BUILD_SELECTOR'), target: 'deploy'
+            }
+        }
+
+  - 빌드후 로그와 Workspace 확인
+
+* 서버로 바이너리 전송
+
+  - stage('Send to target') { .. } 를 다음으로 교체
+
+        stage('Send to target') {
+            steps {
+                sshPublisher(
+                        publishers: [
+                                sshPublisherDesc(configName: 'server_1',
+                                        transfers: [
+                                                sshTransfer(cleanRemote: false, excludes: '', execCommand: 'ls -al', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: 'deploy', sourceFiles: 'deploy/*-SNAPSHOT.jar')
+                                        ],
+                                        usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)
+                        ]
+                )
+            }
+        }
+
+  - 빌드후 로그 확인
+
+* 파라미터를 추가하여 실수로 인한 실행 방지
+  - parameters { .. } 를 다음으로 교체
+
+      parameters {
+          booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
+          buildSelector defaultSelector: upstream(fallbackToLastSuccessful: true), description: '배포할 pipeline-build 빌드', name: 'BUILD_SELECTOR'
+      }
+
+  - stage('Checking Deployment') { .. } 을 다음으로 교체
+
+          stage("Checking Deployment") {
+              when {
+                  environment name: 'ARE_YOU_SURE', value: 'false'
+              }
+              steps {
+                  error('Executed mistakenly.')
+              }
+          }
+
+  - 빌드하여 로그 확인
+
+* 파이프라인을 파일로 관리
+  - 지금까지 작성한 파이프라인 스크립트를 github repo 의 main 브랜치의 /Jenkinsfile-deploy 로 저장후 커밋/푸시
+  - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
+    - SCM > Git
+      - Repository URL : git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git
+      - Credential : Github SSH키선택
+      - Branch Specifier : ${BRANCH.replace("origin/", "*/")}
+    - Script Path : Jenkinsfile-deploy
+  - 빌드후 로그 확인

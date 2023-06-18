@@ -14,6 +14,7 @@
   - Job 구성 > 빌드 후 조치 > E-mail notification 추가
     - Recipients 에 이메일 수신자 추가
   - Job 빌드후 이메일 수신 확인
+
 * Extended E-mail Notification 설정
   - Jenkins 관리 > System > Extended E-mail Notification 로  이동
     - SMTP 서버 : smtp.gmail.com
@@ -28,7 +29,9 @@
     - Attach Build Log 설정
     - Advanced Settings
       - Add 버튼을 누르고 Always 로 변경
-  * Job 빌드후 이메일 수신 확인
+
+  - Job 빌드후 이메일 수신 확인
+
 * Slack 메시지 전송
   - Slack 설정
     - 좌측 More > App 클릭
