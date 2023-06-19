@@ -56,7 +56,6 @@ pipeline {
                 // 환경 변수는 env.ENV, ENV 로 접근 가능
 
                 echo "WORKSPACE : ${env.WORKSPACE}, GIT BRANCH: ${env.GIT_BRANCH}"
-                echo "빌드할 브랜치  : BRANCH ${BRANCH}, env.BRANCH ${env.BRANCH}, params.BRANCH ${params.BRANCH}"
                 echo "배포 포함 여부 : INCLUDE_DEPLOY  ${INCLUDE_DEPLOY}, env.INCLUDE_DEPLOY ${env.INCLUDE_DEPLOY}, params.INCLUDE_DEPLOY ${params.INCLUDE_DEPLOY}"
 
                 checkout scmGit(
@@ -76,7 +75,6 @@ pipeline {
                         sh "./gradlew build"
                     }
                 }
-                echo "빌드한 브랜치  : BRANCH ${BRANCH}, env.BRANCH ${env.BRANCH}, params.BRANCH ${params.BRANCH}"
                 echo "배포 포함 여부 : INCLUDE_DEPLOY  ${INCLUDE_DEPLOY}, env.INCLUDE_DEPLOY ${env.INCLUDE_DEPLOY}, params.INCLUDE_DEPLOY ${params.INCLUDE_DEPLOY}"
             }
         }
