@@ -1,0 +1,99 @@
+* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요
+
+  docker run -d --rm --name ngrok --hostname ngrok \
+         -e NGROK_AUTHTOKEN=[ngrok에서 발급받은 auth key] \
+         --network=practice \
+         -p 4040:4040 \
+         ngrok/ngrok:latest http http://jenkins:8080
+
+  http://localhost:4040
+
+* pipeline-pr 초기 구조 생성
+
+  - Dashboard > 새 Item
+    - Pipeline 선택
+    - Item명 : pipeline-pr 지정
+
+* pipeline-build 의 jenkins 파일 컨텐트를 일단 복사
+
+* 불필요 parameters / triggers 제거
+  - 파일 초반의 properties(...) 제거
+  - triggers { }
+  제거
+
+* stages { stage("Prepare") { steps { ... } } } 에 Github Pull Request Builder 트리거 추가
+
+properties([
+        // https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/
+        pipelineTriggers([
+                // PR builder trigger
+                [
+                        $class        : 'GhprbTrigger',
+                        adminlist     : '각자의 Github 계정',
+                        cron: "*/15 * * * *",
+                        permitAll     : false,
+                        useGitHubHooks: true,
+                        triggerPhrase : '.*(test this|build this|deploy this).*',
+                        gitHubAuthId  : '[각자의 github auth id 로 변경]', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
+                        extensions    : [
+                                [
+                                        $class             : 'GhprbSimpleStatus',
+                                        commitStatusContext: 'jenkins',
+                                        showMatrixStatus   : false
+                                ]
+                        ]
+                ]
+        ])
+])
+
+* 체크아웃 GIT BRANCH 를 ${SHA1} 으로 변경 및 refspec 추가
+  - stage('Checkout') { .. } 영역을 다음으로 교체
+
+        stage('Checkout') {
+            steps {
+                checkout scmGit(
+                        branches: [[name: '${SHA1}']],
+                        userRemoteConfigs: [[
+                            credentialsId: '[각자의github ssh key에 대한 credential id]',
+                            url: 'git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git',
+                            // [중요!!]이 부분 반드시 추가
+                            refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
+                        ]],
+                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                )
+            }
+        }
+
+* 불필요 테스크 제거
+  - stage('SonarScanner') { .. } 제거
+  - post { always { .. }  } 내의 다음 항목 제거
+
+                mineRepository()
+                emailext attachLog: true, body: email_content(), subject: email_subject(), to: 'junoyoon@gmail.com'
+                slackSend channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}"
+
+* 배포 조건 변경 - post { success { .. } } 를 다음으로 교체
+                success {
+                    script {
+                        if ((env.ghprbCommentBody ?: "").contains("deploy this")) {
+                            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+                            build(
+                                   job: 'pipeline-deploy',
+                                   parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                                   wait: false,
+                                   propagate: false
+                            )
+                        }
+                    }
+                }
+
+* 파이프라인을 파일로 관리
+  - 지금까지 작성한 파이프라인 스크립트를 github repo 의 main 브랜치의 /Jenkinsfile-pr 로 저장후 커밋/푸시
+  - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
+    - SCM > Git
+      - Repository URL : git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git
+      - Credential : Github SSH키선택 (github-ssh 로 했었음)
+      - [중요!!] 고급 > refspec: : +refs/pull/*:refs/remotes/origin/pr/*
+      - Branch Specifier : refs/remotes/${SHA1}
+    - Script Path : Jenkinsfile-pr
+  - 빌드후 로그 확인

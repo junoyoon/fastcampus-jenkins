@@ -1,0 +1,64 @@
+* PR 커멘트 빌드 가능 하도록 추가
+  - Pipeline: Github 플러그인 추가 하신후 restart
+  - triggers 추가
+  triggers {
+        issueCommentTrigger('.*(test this|build this|deploy this).*')
+  }
+
+  - PR 에 커멘트 입력시 빌드 시작 여부 확인
+
+* PR Commit 메시지가 deploy this 일때 배포되도록 수정
+    - isDeploymentNecessary  메소드에 조건 추가
+
+  def isDeploymentNecessary() {
+      return isMainOrDevelop() || (env.GITHUB_COMMENT ?: "").contains("deploy this")
+  }
+
+  - Deploy 실행할때 커멘트에 메시지 추가.
+     - post { success { script {..}} 를 다음과 같이 수정
+
+            script {
+                  if (params.DEPLOY_ENABLED == true) {
+                     archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar', followSymlinks: false
+                     build(
+                             job: 'pipeline-deploy',
+                             parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                             wait: false,
+                             propagate: false
+                      )
+                  }
+                  if (isPr()) {
+                      echo "pipeline-deploy 실행"
+                      if (env.CHANGE_ID) {
+                        pullRequest.comment('This PR invoked pipeline-deploy..')
+                      }
+                  }
+            }
+
+  - 빌드후 정상 동작 확인
+
+
+* 빌드 고도화
+  - git checkout 시 ssh 사용
+      - Pipeline 구성 > Branch Sources > Github > Behavior > Add > Checkout over SSH
+        - Credential : github-ssh 입력
+  - draft PR 제외
+      - Pipeline 구성 > Branch Sources > Github > Behavior > Add > Ignore pull requests marked as drafts
+  - PR 의 디폴트 context 를 간결하게 수정
+      - Github Custom Notification Context SCM Behaviour 플러그인 추가
+      - Pipeline 구성 > Branch Sources > Github > Behavior > Add > Custom Github Notification Context
+        - Label : jenkins
+  - projects 이하 변경때만 빌드
+      - Pipeline: Multibranch build strategy extension 플러그인 설치
+      - Pipeline 구성 > Branch Sources > Property strategy > Add > Build strategies > Build included regions strategy
+        Trigger builds for included regions 에 다음을 추가
+        README.md
+        projects/**/*
+
+* Jenkinsfile 파일 저장
+  - Github 에 Jenkinsfile 추가
+  - Pipeline 구성 > Build Configuration
+      - Mode: by Jenkinsfile
+      - Script Path : Jenkinsfile
+
+  - 저장후 빌드 / 로그 확인

@@ -18,7 +18,7 @@
       - Job > 빌드후 조치 > Send build artifact over SSH 추가
         - Name: server_1
         - Source files: ${JENKINS_HOME}/workspace/practice1-build/projects/spring-app/deploy/*-SNAPSHOT.jar
-        - Remove prefix : ${JENKINS_HOME}/workspace/practice1-build/projects/spring-app/deploy
+        - Flatten file 선택
 
 * 위 방식의 문제점
   - practice1-build 의 workspace 가 remote node 에 있을 수 있음 (agent 사용시)

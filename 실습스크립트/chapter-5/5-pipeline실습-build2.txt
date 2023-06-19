@@ -1,0 +1,138 @@
+* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요
+
+  docker run -d --rm --name ngrok --hostname ngrok \
+         -e NGROK_AUTHTOKEN=[ngrok에서 발급받은 auth key] \
+         --network=practice \
+         -p 4040:4040 \
+         ngrok/ngrok:latest http http://jenkins:8080
+
+  http://localhost:4040
+
+* pipeline-build pipeline 구성으로 진입
+
+  - post { success {.. } } 를 다음으로 대체
+
+        success {
+            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+            build(
+                   job: 'pipeline-deploy',
+                   parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                   wait: false,
+                   propagate: false
+            )
+        }
+
+  - 빌드후 pipeline-deploy 시작하는지 확인
+
+* 배포 포함 여부 파라미터를 받아 선택적 실행
+
+  - parameters { } 블럭을 커멘트 아웃 하고 다음으로 교체
+
+    parameters {
+        booleanParam(defaultValue: true, description: '배포 포함 여부', name: 'DEPLOY_ENABLED')
+    }
+
+  - post { success { ... } } 에 DEPLOY_ENABLED 시에만 pipeline-deploy 시작하도록 script { } 블록 추가
+                success {
+                    archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+                    script {
+                        if (params.DEPLOY_ENABLED == true) {
+                            build(
+                                   job: 'pipeline-deploy',
+                                   parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                                   wait: false,
+                                   propagate: false
+                            )
+                        }
+                    }
+                }
+
+  - 반드시 2번 빌드후, 파라미터 입력을 받고, 배포가 선택적으로 진행되는지 확인
+
+* 빌드 브랜치 선택 파라미터 추가
+  - 기존 입력했던 parameters { ... } 제거
+  - 다음을 파일 제일 앞쪽에 붙여 넣기
+
+        // 일부 플러그인은 declartive 파이프라인 미지원
+        // parameters 의 경우 Snippet Generator 의 Properties 로 생성 가능
+        // http://localhost:8080/pipeline-syntax/
+
+        stage('Prepare') {
+            steps {
+                script {
+                    properties([
+                            parameters([
+                                    gitParameter(branch: '', branchFilter: '.*', defaultValue: 'origin/main', description: '배포할 브랜치를 선택합니다.', listSize: '3', name: 'BRANCH', quickFilterEnabled: true, selectedValue: 'NONE', sortMode: 'ASCENDING_SMART', tagFilter: '*', type: 'GitParameterDefinition'),
+                                    // https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/#input-wait-for-interactive-input
+                                    [
+                                            $class              : 'DynamicReferenceParameter',
+                                            choiceType          : 'ET_FORMATTED_HTML',
+                                            name                : 'BRANCH_TO_BUILD',
+                                            referencedParameters: 'BRANCH',
+                                            script              : [
+                                                    $class        : 'GroovyScript',
+                                                    script        : [
+                                                            sandbox: true,
+                                                            script : groovy_script()
+                                                    ],
+                                                    fallbackScript: [
+                                                            sandbox: true,
+                                                            script : 'return ""'
+                                                    ]
+                                            ]
+                                    ],
+                                    booleanParam(defaultValue: true, description: '배포 포함 여부', name: 'DEPLOY_ENABLED')
+                            ])
+                    ])
+                }
+            }
+        }
+
+  - 다음을 pipeline의 가장 아래쪽 붙여넣기
+
+def groovy_script() {
+  return '''if (BRANCH == "") {
+      return "origin/main 가 빌드 됩니다."
+  } else {
+      return "$BRANCH 가 빌드 됩니다."
+  }'''
+}
+
+
+  - stage('Checkout') { .. } 의 branches 를 다음으로 교체
+
+        branches: [[name: '${params.BRANCH}']]
+
+  - 반드시 2번 빌드후, 파라미터 입력을 받고, 선택한 브랜치가 선택적으로 빌드 되는지 확인
+
+* main 브랜치에만 SonarQube 실행
+  - stage("SonarQube") {  바로 뒤에 다음 조건 주가
+
+    when {
+        expression {
+            // GIT_BRANCH 또는 BRANCH_NAME 는 Jenkinsfile 을 git 으로부터 checkout 할때만 사용 가능
+            // 대신 파라미터로 받는 BRANCH 활용
+            return params.BRANCH == "origin/main"
+        }
+    }
+
+  - 빌드후 main 일때만 SonarQube 실행 되는지 확인
+
+* 파이프라인을 파일로 관리
+  - 지금까지 작성한 파이프라인 스크립트를 github repo 의 main 브랜치의 /Jenkinsfile-build 에 저장후 커밋/푸시
+  - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
+    - SCM > Git
+      - Repository URL : git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git
+      - Credential : Github SSH키선택 (github-ssh로 지정했음)
+      - Branch Specifier : ${BRANCH}
+    - Script Path : Jenkinsfile-build
+  - 빌드후 오류 확인
+  - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
+    - Branch Specifier : refs/remotes/${BRANCH}
+  - 빌드후 정상 동작 확인
+
+* GIT_BRANCH / BRANCH_NAME 환경 변수 확인
+  * stage("Checkout") { steps {  } } 다음 환경 변수 추가하여 정상 동작 확인
+    echo "$BRANCH_NAME"
+    echo "$GIT_BRANCH"
+  * options 에 skipDefaultCheckout() 제거후 빌드 정상 동작 확인

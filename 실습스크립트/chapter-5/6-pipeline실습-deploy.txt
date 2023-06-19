@@ -54,6 +54,8 @@ pipeline {
     options {
         // 빌드를 5개만 유지
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+        // 실제 소스 코드는 불필요 하므로 checkout skip
+        skipDefaultCheckout()
     }
 
   - 빌드후 구성을 눌러, 어떻게 triggers 와 options 가 반영되었는지 확인하기
@@ -61,9 +63,8 @@ pipeline {
 * 파라미터 셋팅
   - parameters { .. } 를 다음으로 교체
 
-        booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
-
     parameters {
+        booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
         buildSelector defaultSelector: upstream(fallbackToLastSuccessful: true), description: '배포할 pipeline-build 빌드', name: 'BUILD_SELECTOR'
     }
 
@@ -72,7 +73,7 @@ pipeline {
 
         stage('Copying from upstream.') {
             steps {
-                copyArtifacts filter: 'projects/spring-app/build/libs/*', fingerprintArtifacts: true, flatten: true, projectName: 'pipeline', selector: buildParameter('BUILD_SELECTOR'), target: 'deploy'
+                copyArtifacts filter: 'projects/spring-app/build/libs/*', fingerprintArtifacts: true, flatten: true, projectName: 'pipeline-build', selector: buildParameter('BUILD_SELECTOR'), target: 'deploy'
             }
         }
 
@@ -99,12 +100,6 @@ pipeline {
   - 빌드후 로그 확인
 
 * 파라미터를 추가하여 실수로 인한 실행 방지
-  - parameters { .. } 를 다음으로 교체
-
-      parameters {
-          booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
-          buildSelector defaultSelector: upstream(fallbackToLastSuccessful: true), description: '배포할 pipeline-build 빌드', name: 'BUILD_SELECTOR'
-      }
 
   - stage('Checking Deployment') { .. } 을 다음으로 교체
 
@@ -124,7 +119,7 @@ pipeline {
   - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
     - SCM > Git
       - Repository URL : git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git
-      - Credential : Github SSH키선택
-      - Branch Specifier : ${BRANCH.replace("origin/", "*/")}
+      - Credential : Github SSH키선택 (github-ssh 로 했었음)
+      - Branch Specifier : */main
     - Script Path : Jenkinsfile-deploy
   - 빌드후 로그 확인

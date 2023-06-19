@@ -1,3 +1,5 @@
+* Github Pull Request builder Plugin 설치
+
 * Github Pull Request builder Global 설정
   - jenkins 관리 > System > Github Pull Request Builder
   - Github Server API URL : https://api.github.com

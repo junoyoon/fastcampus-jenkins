@@ -14,12 +14,12 @@
 
 * My View 생성
   - Dashboard > My View > 가운데 + 클릭
-    - View name : prbuilder view
+    - View name : pr view
     - Type : List View 선택
   - Filter build queue 선택
   - Filter build executors
   - 작업
-    - prbuilder 선택
+    - practice1-pr 선택
     - number of static analysis issues 삭제
   - 결과 확인
 

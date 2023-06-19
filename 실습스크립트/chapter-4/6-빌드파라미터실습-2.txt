@@ -13,7 +13,7 @@
   - 빌드후 확인
 
 * 무슨 브랜치가 빌드되는지 불확실한 문제 해결
-  - Active Parameter Plugin 설치
+  - Active Choices Plugin 설치
   - practice1-build > 구성 > General > 매개 변수 추가 > Active Choices Reactive Reference Parameter
     - Name : BRANCH_TO_BUILD
     - Groovy Script : 체크
@@ -24,7 +24,7 @@
             return "$BRANCH"
         }
     - Use Groovy Sandbox 클릭
-    - Fallback Script : [ "origin/main" ]
+    - Fallback Script : return "origin/main"
     - Description : 실제 빌드될 브랜치 입니다.
     - Choice Type : Formatted HTML
     - Referenced parameter : BRANCH
@@ -44,7 +44,7 @@
     - 빌드후 조치 > Trigger parameterized build on other projects 추가
       - Projects to build : practice1-deploy
       - Add Parameter > Predefined parameters
-        ARE_YOU_SURE=${NCLUDE_DEPLOY}
+        ARE_YOU_SURE=${INCLUDE_DEPLOY}
         입력
 
   - 빌드 결과 확인

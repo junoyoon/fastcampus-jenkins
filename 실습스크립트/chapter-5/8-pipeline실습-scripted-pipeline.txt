@@ -55,8 +55,8 @@ properties([
                 booleanParam(defaultValue: true, description: '배포 포함 여부', name: 'DEPLOY_ENABLED')
         ]),
         pipelineTriggers([
-            pollSCM('*/10 * * * *')
-            //, [$class: 'GitHubPushTrigger']
+            // pollSCM('*/10 * * * *')
+            [$class: 'GitHubPushTrigger']
         ]),
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')),
         githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
@@ -68,8 +68,7 @@ properties([
             checkout scmGit(
                     branches: [[name: '${BRANCH}']],
                     userRemoteConfigs: [[
-                        // credential id 는 http://localhost:8080/pipeline-syntax/ 에서 checkout step 생성을 통해 확인 가능
-                        credentialsId: '[각자의github ssh key에 대한 credential id]',
+                        credentialsId: 'github-ssh',
                         url: 'git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git']
                     ],
                     extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
@@ -103,7 +102,6 @@ properties([
                           -Dsonar.host.url=http://sonarqube:9000 \
                           -Dsonar.projectKey=sample \
                           -Dsonar.projectBaseDir=${WORKSPACE}/projects/spring-app \
-                          -Dsonar.login=[각자의 SonarQube 토큰]
                  """
           }
 
@@ -125,6 +123,7 @@ properties([
 
     if (params.DEPLOY_ENABLED == true) {
         stage('Deploy') {
+                archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar', followSymlinks: false
                 build(
                         job: 'pipeline-deploy',
                         parameters: [booleanParam(name: 'ARE_YOU_SURE', value: true)],
@@ -145,11 +144,8 @@ properties([
         jacoco sourcePattern: '**/src/main/kotlin'
         emailext attachLog: true, body: email_content(), subject: email_subject(), to: 'junoyoon@gmail.com'
         slackSend channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}"
-
-        if (currentBuild.result == "SUCCESS") {
-            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar', followSymlinks: false
-        }
     }
+
   - node { } 바깥쪽에 다음 메소드를 추가
 
 def email_content() {

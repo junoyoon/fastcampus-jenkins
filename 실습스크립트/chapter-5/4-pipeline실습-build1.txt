@@ -1,0 +1,217 @@
+* 기존 job 정지
+  - practice1-build
+  - practice1-pr
+
+* pipeline 초기 프로젝트 생성
+  - Dashboard > 새 Item
+    - Pipeline 선택
+    - Item명 : pipeline-build 지정
+  - Dashboard > 새 Item
+    - Pipeline 선택
+    - Item명 : pipeline-deploy 지정
+  - pipeline-build > Configuration > Pipeline
+    - try sample Pipeline > Hello World 선택후 빌드후 로그 보기
+    - try sample Pipeline > scripted Pipeline 선택후 빌드후 로그 보기
+
+* pipeline-build에 초기 구조 지정후 로그 보기
+
+pipeline {
+    // 어떠한 에이전트에서도 실행 가능함을 표현
+    agent any
+
+    // 환경 변수 지정
+
+    /**
+    environment {
+    }
+    */
+
+    /**
+    triggers {
+    }
+    */
+
+    /**
+    options {
+    }
+    */
+
+    /**
+    parameters {
+    }
+    */
+
+
+    // stages > stage > steps 순으로 구성
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checkout"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Build"
+            }
+        }
+
+        stage('SonarScanner') {
+            steps {
+                echo "SonarScanner"
+            }
+        }
+    }
+
+    // post 는 stage 마다 실행시킬 수도 있고, 전체가 stages가 완료된 다음에 실행 시킬 수도 있음
+    /*
+    post {
+        always {
+        }
+        success {
+        }
+    }
+    */
+}
+
+* triggers / options 설정 하기
+  - triggers 커멘트 제거후 다음 입력
+
+    triggers {
+        // pollSCM '*/10 * * * *'
+        githubPush() // GitHub hook trigger for GITScm polling
+    }
+
+  - options 커멘트 제거후 다음 입력
+
+    options {
+        // 빌드를 5개만 유지
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+        // github 프로젝트 설정
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/[본인GITHUB계정]/fastcampus-jenkins')
+        // 브랜치를 지정하여 체크아웃 할 것이므로, 디폴트 체크아웃 disable
+        skipDefaultCheckout()
+    }
+
+  - 빌드후 구성을 눌러, 어떻게 triggers 와 options 가 반영되었는지 확인하기
+
+* Github checkout 설정
+  - github ssh key 재생성
+    - http://localhost:8080/manage/credentials/store/system/domain/_/newCredentials
+      - Kind : SSH Username with private key
+      - ID : github-ssh
+      - Description : github-ssh
+      - Username : 각자의 github 계정
+      - Private Key : Enter directly
+    - 저장
+  - stage('Checkout') { .. } 을 다음으로 대체하기
+
+        stage('Checkout') {
+            steps {
+                checkout scmGit(
+                        branches: [[name: 'origin/main']],
+                        userRemoteConfigs: [[
+                            // credential id 는 http://localhost:8080/pipeline-syntax/ 에서 checkout step 생성을 통해 확인 가능
+                            credentialsId: 'github-ssh',
+                            url: 'git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git']
+                        ],
+                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                )
+            }
+        }
+
+  - 빌드후, 빌드를 클릭하여 Workspaces 에 어떻게 반영되었는지 확인
+
+* Gradle 빌드 설정
+  - stage('Build') {..} 부분을 다음으로 교체
+
+        stage('Build') {
+            steps {
+              // dir 은 디렉토리 이동
+              dir("projects/spring-app") {
+                  // withGradle 을 하면, Gradle 로그를 해석
+                  withGradle {
+                       sh "./gradlew build"
+                  }
+              }
+            }
+        }
+
+  - 저장후, 빌드를 클릭하여 로그 확인
+
+* SonarScanner 실행 설정
+  - environment 의 커멘트를 제거하고 다음과 같이 입력
+
+    environment {
+        // jenkins 가 관리하는 도구의 위치는 이와 같이 환경 변수로 저장 가능
+        SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+    }
+
+  - stage('SonarQube') {..} 부분을 다음으로 교체
+
+        stage('SonarScanner') {
+            steps {
+                // sonarqube 환경하에서, 실행
+                withSonarQubeEnv("sonarqube-server") {
+                    sh """
+                    ${env.SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.projectKey=practice1 \
+                        -Dsonar.projectBaseDir=${WORKSPACE}/projects/spring-app
+                     """
+                }
+
+                // quality gate 통과시 까지 대기
+                timeout(time: 1, unit: 'MINUTES') {
+
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+  - 빌드후 로그 확인
+
+* 빌드후 조치 추가
+  - 테스트 / jacoco / ktlint / Scm Forensic 결과 처리 추가
+  - post { .. } 를 다음으로 교체
+
+    // post 는 stage 마다 실행시킬 수도 있고, 전체가 stages가 완료된 다음에 실행 시킬 수도 있음
+    post {
+        always {
+            scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
+            junit '**/test-results/**/*.xml'
+            jacoco sourcePattern: '**/src/main/kotlin'
+            mineRepository()
+        }
+
+        success {
+            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+        }
+    }
+
+  - 이메일 / slack 전송 추가 - post { always { .. } } 스텝에 다음을 추가
+
+            emailext attachLog: true, body: email_content(), subject: email_subject(), to: '각자의이메일주소'
+            slackSend channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}"
+
+  - 파일의 제일 아래쪽에 다음 groovy 메소드를 추가
+
+def email_subject() {
+    return '빌드통지!! - ${DEFAULT_SUBJECT}'
+}
+
+def email_content() {
+    return '''이 이메일은 중요한 것이여!!
+
+${DEFAULT_CONTENT}
+
+'''
+}
+
+def custom_msg(status) {
+    return " $status: Job [${env.JOB_NAME}] Logs path: ${env.BUILD_URL}/consoleText"
+}
+
+

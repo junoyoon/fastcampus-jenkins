@@ -1,0 +1,218 @@
+* 기존 job disable
+  - pipeline-build
+  - pipeline-pr
+  - scripted-build
+  - practice1-build
+  - practice1-pr
+
+* Multibranch Pipeline Inline Definition Plugin 설치
+
+* Dashboard > 새로운 Item
+  - 이름 : fastcampus-multibranch
+  - Type : Multibranch Pipeline
+  - 생성
+
+  - Branch Sources
+    - Credentials : gitub credential (id/pw 방식)이 없으면 다음 진행
+        - Add > Jenkins >
+          - Username : github 계정
+          - Password : github secret token 입력
+            - 만약 아직 personal access token 발급 받지 않았다면, 다음으로 이동하여 발급
+            - https://github.com/settings/tokens
+               - 필요 권한 - repo, admin:repo_hook
+          - ID : github-id-and-personal-access-token
+          - Description : github-id-and-personal-access-token
+          - Add 클릭
+        - Add > Jenkins > github-id-and-personal-access-token 선택
+        - Repository HTTPS URL : https://github.com/[각자의계정]/fastcampus-jenkins
+        - Validate 클릭하여 접근 권한 확인
+    - Behaviors
+        - Discover pull request from origin
+          Strategy : Merging the pull request with the current target branch revision
+        - Discover pull request from forks
+          Strategy : Merging the pull request with the current target branch revision
+        - Add > Sparse Checkout paths
+          Paths : projects/spring-app
+
+  - Build Configuration
+    - Mode : Common pipeline definition for markerfile
+      - Markerfile : projects/spring-app/build.gradle.kts
+      - Script 에 다음을 입력
+
+pipeline {
+    // 어떠한 에이전트에서도 실행 가능함을 표현
+    agent any
+
+    environment {
+        // jenkins 가 관리하는 도구의 위치는 이와 같이 환경 변수로 저장 가능
+        SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+    }
+
+    parameters {
+        booleanParam(defaultValue: false, description: '배포 포함 여부', name: 'DEPLOY_ENABLED')
+    }
+
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+        // 디폴트 checkout skip 설정 제거
+    }
+
+    // stages > stage > steps 순으로 구성
+    stages {
+        stage('Build') {
+            steps {
+                // withGradle 을 하면, Gradle 로그를 해석
+                dir("projects/spring-app") {
+                    withGradle {
+                        sh "./gradlew build"
+                    }
+                }
+            }
+        }
+
+        stage('SonarScanner') {
+            /*
+            when {
+                expression {
+                      return isSonarQubeNecessary()
+                  }
+            }
+            */
+            steps {
+                // sonarqube 환경하에서, 실행
+                withSonarQubeEnv("sonarqube-server") {
+                    sh """
+                    ${env.SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.projectKey=sample \
+                        -Dsonar.projectBaseDir=${WORKSPACE}/projects/spring-app
+                  """
+                }
+
+                // quality gate 통과시 까지 대기
+                timeout(time: 1, unit: 'MINUTES') {
+
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+    }
+
+    post {
+        always {
+            scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
+            junit '**/test-results/**/*.xml'
+            jacoco sourcePattern: '**/src/main/kotlin'
+            script {
+                mineRepository()
+                emailext attachLog: true, body: email_content(), subject: email_subject(), to: '[각자의이메일주소]'
+                slackSend(channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}")
+            }
+        }
+
+        success {
+            script {
+                if (params.DEPLOY_ENABLED == true) {
+                    archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar', followSymlinks: false
+                    build(
+                           job: 'pipeline-deploy',
+                           parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                           wait: false,
+                           propagate: false
+                    )
+                    echo "pipeline-deploy 실행"
+                }
+            }
+        }
+    }
+}
+
+// pipeline 바깥쪽 영역은 groovy 사용 가능
+def email_content() {
+    return '''이 이메일은 중요한 것이여!!
+
+${DEFAULT_CONTENT}
+
+'''
+}
+
+def email_subject() {
+    return '빌드통지!! - ${DEFAULT_SUBJECT}'
+}
+
+def custom_msg(status) {
+    return " $status: Job [${env.JOB_NAME}] Logs path: ${env.BUILD_URL}/consoleText"
+}
+
+
+  - Scan Repository Triggers
+    - Periodically if not otherwise run
+      Interval : 1 day
+  - Orphaned Item Strategy
+    - Discard old item
+      - Days to keep old items : 1
+  - 저장후 로그
+
+* 빌드후 pipeline 생성 상황 확인
+  - main 에 change / push 후 빌드 확인
+  - pr 생성후, 해당 pr 변경후 빌드 확인
+
+* 브랜치별 다른 처리하도록 변경
+  - main / develop 일때만 SonarScanner 실행
+    - stage('SonarScanner') {  when {.. }  } 구문을 다음으로 교체
+
+              when {
+                  expression {
+                      return isSonarQubeNecessary()
+                  }
+              }
+
+  - main / develop 일 경우에만 디폴트로 artifact archiving 과 배포
+
+     - parameters {.. } 영역을 다음과 같이 변경
+
+   parameters {
+       booleanParam(defaultValue: isDeploymentNecessary(), description: '배포 포함 여부', name: 'DEPLOY_ENABLED')
+   }
+
+
+  - PR 일때는 SCM분석 / 통지 제거
+    - post { always { script {...} } } 영역을 다음으로 수정
+
+            script {
+                if (isNotificationNecessary()) {
+                    mineRepository()
+                    emailext attachLog: true, body: email_content(), subject: email_subject(), to: '[각자의이메일주소]'
+                    slackSend(channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}")
+                }
+            }
+
+  - 다음 메소드를 하단에 추가
+
+def isSonarQubeNecessary() {
+    return isMainOrDevelop()
+}
+
+def isDeploymentNecessary() {
+    return isMainOrDevelop()
+}
+
+def isNotificationNecessary() {
+    return !isPr()
+}
+
+def isMainOrDevelop() {
+    return (env.BRANCH_NAME == "develop" || env.BRANCH_NAME == "main")
+}
+
+def isPr() {
+    return env.BRANCH_NAME.startsWith("PR-")
+}
+
+* main 에 직접 커밋, 빌드 확인
+* PR 생성후, 빌드 확인
+  - 커멘트 추가, 빌드 미동작 확인

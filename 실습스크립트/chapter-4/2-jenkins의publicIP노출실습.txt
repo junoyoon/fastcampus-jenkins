@@ -7,7 +7,7 @@
   - ngrok docker container 실행
 
   docker run -d --rm --name ngrok --hostname ngrok \
-         -e NGROK_AUTHTOKEN=[auth token] \
+         -e NGROK_AUTHTOKEN=2RPenMrLxsKWIbQWSsmLPmqz2xZ_7HGMgmEWJUbJVnbhCXBJr \
          --network=practice \
          -p 4040:4040 \
          ngrok/ngrok:latest http http://jenkins:8080

@@ -2,28 +2,6 @@
 // 명시적으로 선언적 pipeline 문법이 제공되지 않은 플러그도 선언적 pipeline 에 적용하기 위해 groovy script 로 작성
 // 배치된 순서에 따라 노출이 되므로, parameters 에 적용할 수 있었던 gitParameter 와 booleanParam 도 적용
 //
-properties([
-        parameters([
-                [
-                        $class              : 'DynamicReferenceParameter',
-                        choiceType          : 'ET_FORMATTED_HTML',
-                        name                : 'BRANCH_TO_BUILD',
-                        referencedParameters: 'BRANCH',
-                        script              : [
-                                $class        : 'GroovyScript',
-                                script        : [
-                                        sandbox: true,
-                                        script : groovy_script()
-                                ],
-                                fallbackScript: [
-                                        sandbox: true,
-                                        script : 'return ""'
-                                ]
-                        ]
-                ]
-
-        ])
-])
 
 pipeline {
     // 어떠한 에이전트에서도 실행 가능함을 표현
@@ -34,11 +12,11 @@ pipeline {
     }
 
     parameters {
-            gitParameter(branch: '', branchFilter: '.*', defaultValue: 'origin/main', description: '배포할 브랜치를 선택합니다.', listSize: '3', name: 'BRANCH', quickFilterEnabled: true, selectedValue: 'NONE', sortMode: 'ASCENDING_SMART', tagFilter: '*', type: 'GitParameterDefinition')
             booleanParam(defaultValue: true, description: '배포 포함 여부', name: 'INCLUDE_DEPLOY')
     }
     triggers {
-        pollSCM '*/10 * * * *' // Poll Scm
+        issueCommentTrigger('.*test this.*')
+        // pollSCM '*/10 * * * *' // Poll Scm
         // githubPush() // GitHub hook trigger for GITScm polling
     }
 
@@ -56,9 +34,7 @@ pipeline {
                 // 환경 변수는 env.ENV, ENV 로 접근 가능
 
                 echo "WORKSPACE : ${env.WORKSPACE}, GIT BRANCH: ${env.GIT_BRANCH}"
-                echo "빌드할 브랜치  : BRANCH ${BRANCH}, env.BRANCH ${env.BRANCH}, params.BRANCH ${params.BRANCH}"
                 echo "배포 포함 여부 : INCLUDE_DEPLOY  ${INCLUDE_DEPLOY}, env.INCLUDE_DEPLOY ${env.INCLUDE_DEPLOY}, params.INCLUDE_DEPLOY ${params.INCLUDE_DEPLOY}"
-
                 checkout scmGit(
                         branches: [[name: "${BRANCH ?: GIT_BRANCH}"]],
                         userRemoteConfigs: [[credentialsId: 'cd6a31dc-9989-4dde-a56b-0247320a727f', url: 'git@github.com:fastcampus-jenkins/fastcampus-jenkins.git']],
@@ -70,13 +46,16 @@ pipeline {
 
         stage('Build') {
             steps {
+                script {
+                    pullRequest.comment('This PR is highly illogical..')
+                }
+
                 // withGradle 을 하면, Gradle 로그를 해석
                 dir("projects/spring-app") {
                     withGradle {
                         sh "./gradlew build"
                     }
                 }
-                echo "빌드한 브랜치  : BRANCH ${BRANCH}, env.BRANCH ${env.BRANCH}, params.BRANCH ${params.BRANCH}"
                 echo "배포 포함 여부 : INCLUDE_DEPLOY  ${INCLUDE_DEPLOY}, env.INCLUDE_DEPLOY ${env.INCLUDE_DEPLOY}, params.INCLUDE_DEPLOY ${params.INCLUDE_DEPLOY}"
             }
         }
