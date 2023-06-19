@@ -2,7 +2,7 @@
   - google 개인 정보 설정으로 이동
     https://myaccount.google.com/security?hl=ko
   - 2단계 인증 선택 > 하단의 앱 비밀번호 선택 > 메일 / 기타 (jenkins 기록) 선택
-  - 앱 비밀번호 복사 dhrypolvdxlhbxvm
+  - 앱 비밀번호 복사
   - Jenkins 관리 > System > Email로  이동
     - SMTP 서버 : smtp.gmail.com
     - Use SMTP Authentication 체크
@@ -38,9 +38,6 @@
     - Jenkins CI 검색후 Add 클릭
     - Add to Slack 클릭후 메시지를 받을 Channel 선택
     - Team Subdomain 과 Integration Token Credential ID 기억
-
-    Team Subdomain: naverteam
-    Integration Token Credential ID: Create a secret text credential using vNCimcdYg6ppRAvjrSlh1E4O as the value
 
   - Jenkins 설정
     - Slack 플러그인 설치

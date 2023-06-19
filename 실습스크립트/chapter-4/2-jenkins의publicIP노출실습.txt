@@ -1,0 +1,55 @@
+* ngrok 가입 및 auth 토큰 발급
+  - https://ngrok.com/ 이동후 가입
+  - https://dashboard.ngrok.com/get-started/your-authtoken 로 이동하여 auth token 복사
+
+* ngrok 실행
+
+  - ngrok docker container 실행
+
+  docker run -d --rm --name ngrok --hostname ngrok \
+         -e NGROK_AUTHTOKEN=[auth token] \
+         --network=practice \
+         -p 4040:4040 \
+         ngrok/ngrok:latest http http://jenkins:8080
+
+  - 생성된 DNS 주소 확인
+    - http://localhost:4040/status
+      - URL 부분에서 확인
+      - https://[생성된 고유키].ngrok-free.app
+    - docker 재시작후, 호스트명 변경 확인
+
+      docker restart ngrok
+
+    - http://localhost:4040/status
+      - URL 부분에서 확인
+      - https://[변경된 고유키].ngrok-free.app
+    - URL 을 브라우저에서 입력하여 Jenkins 접근 확인
+      - Visit Site 클릭
+
+* GitHub hook trigger for GITScm polling 설정
+  - practice1 > 구성 > 빌드 유발 > GitHub hook trigger for GITScm polling 체크
+  - 저장
+
+* Github 에 webhook 등록
+  - Jenkins Github 설정에 Public DNS Hook 등록
+    - Jekins 관리 > System > Jenkins Location
+      - Jenkins URL 등록 : https://[고유키].ngrok-free.app
+        - Specify another hook URL for GitHub configuration 이 동작하지 않아서 우회하는 방법임
+        - 관련이슈 : https://github.com/jenkinsci/github-plugin/pull/347
+    - Jekins 관리 > System > Github > 하단 고급 클릭
+      - Re-register hooks for all job 클릭
+    - 로그 확인
+      - http://localhost:8080/manage/log/all
+    - Jekins 관리 > System > Jenkins Location
+      - Jenkins URL 등록 : https://localhost:8080 으로 재변경
+
+* Github 에 저장된 webhook 확인
+  - https://github.com/[각자 계정명]/fastcampus-jenkins/settings/hooks
+    - 이벤트 등록 확인
+
+* Github 프로젝트 변경 커밋 및 동작 확인
+  - https://github.com/[각자 계정명]/fastcampus-jenkins/edit/main/README.md
+    - 텍스트 변경하여 commit
+
+  - http://localhost:8080/ 에서 practice1 빌드 확인
+

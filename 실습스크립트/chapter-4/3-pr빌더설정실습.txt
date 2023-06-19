@@ -1,0 +1,59 @@
+* Github Pull Request builder Global 설정
+  - jenkins 관리 > System > Github Pull Request Builder
+  - Github Server API URL : https://api.github.com
+  - Jenkins URL override : https://[각자의고유호스트명].ngrok-free.app/
+    - 다른 webhook 지원 플러그인과 다르게, 이 플러그인은 호스트명쪽만 변경 가능..
+    - http://localhost:4040 에서 확인 - 만약 ngrok docker 컨테이너가 떠 있지 않으면 앞 클립 참고하여 재시작
+  - Shared secret 에 임의의 암호 정의해 넣음 (Github 가 호출할때 이 암호를 사용하여 Jenkins 호출)
+    - secret text
+  - Credentials > 3-4 클립에서 생성한 Credential 입력
+  - Test Credentials 를 통해 Token 확인
+  - Auto-manage webhooks 클릭
+  - Admin list 에 본인 github ID 입력
+
+* Jenkins PR builder 용 Job 설정
+  - Dashboard > 새로운 Item
+    * Item Name : practice1-pr 입력
+    * Copy from : practice1
+  - General > GitHub project
+    - project url : https://github.com/[각자의 계정]/fastcampus-jenkins/
+  - 소스코드 관리 > Git > Repositories > 고급
+    - Refspec :  +refs/pull/*:refs/remotes/origin/pr/*
+  - Branch Specifier : ${sha1}
+    - 참고로 ${sha1}는 현재 PR이 머지대상에 머지되었을때를 가정한 커밋 / ${ghprbActualCommit} 는 현재 PR 커밋
+  - 빌드 유발
+    - Github Pull Request Builder 선택
+
+* Github repo 에 WebHook 설정
+  - https://github.com/[각자의 계정]/fastcampus-jenkins/settings/hooks 으로 이동
+  - /ghprbhook/ 로 끝나는 URL 을 가진 Web Hook 이 등록되어 있는지 확인
+  - 만약 없다면 직접 등록 Add Hook 입력
+    - Payload URL : https://[고유키].ngrok-free.app/ghprbhook/
+      - 반드시 끝이 / 으로 끝나도록 할 것
+    - Content Type : application/json
+    - Secret : **** (앞서 jenkins 에 지정한 암호 입력)
+    - Let me select individual events 선택후
+      - Issue comments / Pull Request 선택
+    - Add webhook 사용하여 저장
+
+* Github PR 생성
+  - https://github.com/[각자의 계정]/fastcampus-jenkins/edit/main/README.md 으로 이동
+  - 파일 변경후, Commit Change 클릭
+  - Create a new branch for this commit and start a pull request 선택후 Propose changes 클릭
+  - Create Pull Request 클릭 > Create Pull request 클릭
+
+* Jenkins 에서 빌드 현황 확인
+  - practice1-pr Job 의 동작
+  - Github 의 PR의 하단 동작 확인
+
+* Jenkins 에 comment 설정 추가
+  - Job 설정 > 소스코드 관리 > Github Pull Request Builder > 고급
+    - Trigger phrase: test this 입력
+  - Trigger Setup 선택
+    - Commit Status Context : jenkins 입력
+  - 하단의 빌드 스텝 쉘에서 다음 입력
+    echo $ghprbCommentBody
+    exit 1
+  - PR 에 커멘트로 test this 입력
+  - Github 의 PR의 하단 동작 확인
+  - Jenkins 콘솔 확인
