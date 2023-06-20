@@ -52,10 +52,11 @@ pipeline {
     stages {
 
         stage('Build') {
-                script {
+ 
+            steps {
+                                   script {
                 pullRequest.comment('This PR is highly illogical..')
                 }
-            steps {
                 // withGradle 을 하면, Gradle 로그를 해석
                 dir("projects/spring-app") {
                     withGradle {
