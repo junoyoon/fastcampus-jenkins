@@ -25,6 +25,7 @@ properties([
         ])
         
 ])
+
 pipeline {
     // 어떠한 에이전트에서도 실행 가능함을 표현
     agent any
@@ -60,7 +61,7 @@ pipeline {
 
                 checkout scmGit(
                         branches: [[name: "${BRANCH ?: GIT_BRANCH}"]],
-                        userRemoteConfigs: [[credentialsId: 'cd6a31dc-9989-4dde-a56b-0247320a727f', url: 'git@github.com:fastcampus-jenkins/fastcampus-jenkins.git']],
+                        userRemoteConfigs: [[credentialsId: '750c9d6a-3733-4b06-91e5-779f4e4dbe75', url: 'git@github.com:fastcampus-jenkins/fastcampus-jenkins.git']],
                         extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
                 )
                 echo "WORKSPACE : ${env.WORKSPACE}, GIT BRANCH: ${env.GIT_BRANCH}"
