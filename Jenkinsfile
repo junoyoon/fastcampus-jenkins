@@ -25,8 +25,6 @@ properties([
         ])
         
 ])
-
-
 pipeline {
     // 어떠한 에이전트에서도 실행 가능함을 표현
     agent any
