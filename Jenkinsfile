@@ -38,8 +38,8 @@ pipeline {
             booleanParam(defaultValue: true, description: '배포 포함 여부', name: 'INCLUDE_DEPLOY')
     }
     triggers {
-        pollSCM '*/10 * * * *' // Poll Scm
-        // githubPush() // GitHub hook trigger for GITScm polling
+       // pollSCM '*/10 * * * *' // Poll Scm
+       githubPush() // GitHub hook trigger for GITScm polling
     }
 
     options {
