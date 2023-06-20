@@ -39,6 +39,7 @@ pipeline {
     }
     triggers {
        // pollSCM '*/10 * * * *' // Poll Scm
+            
        githubPush() // GitHub hook trigger for GITScm polling
     }
 
