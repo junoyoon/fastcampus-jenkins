@@ -50,22 +50,6 @@ pipeline {
 
     // stages > stage > steps 순으로 구성
     stages {
-        stage('Checkout') {
-            steps {
-                // 파라미터는 env.BRANCH, params.BRANCH, BRANCH 세가지 방식으로 접근 가능
-                // 환경 변수는 env.ENV, ENV 로 접근 가능
-
-                echo "WORKSPACE : ${env.WORKSPACE}, GIT BRANCH: ${env.GIT_BRANCH}"
-                echo "배포 포함 여부 : INCLUDE_DEPLOY  ${INCLUDE_DEPLOY}, env.INCLUDE_DEPLOY ${env.INCLUDE_DEPLOY}, params.INCLUDE_DEPLOY ${params.INCLUDE_DEPLOY}"
-
-                checkout scmGit(
-                        branches: [[name: "${BRANCH ?: GIT_BRANCH}"]],
-                        userRemoteConfigs: [[credentialsId: '750c9d6a-3733-4b06-91e5-779f4e4dbe75', url: 'git@github.com:fastcampus-jenkins/fastcampus-jenkins.git']],
-                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
-                )
-                echo "WORKSPACE : ${env.WORKSPACE}, GIT BRANCH: ${env.GIT_BRANCH}"
-            }
-        }
 
         stage('Build') {
             steps {
