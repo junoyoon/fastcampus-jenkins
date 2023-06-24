@@ -6,7 +6,9 @@
          -p 4040:4040 \
          ngrok/ngrok:latest http http://jenkins:8080
 
-  http://localhost:4040
+  - http://localhost:4040
+  - jenkins host 명 재확인. 기존과 바뀌었다면 다음에서 webhook host 명 변경
+    - https://github.com/[여러분의github계정]/fastcampus-jenkins/settings/hooks
 
 * pipeline-pr 초기 구조 생성
 
@@ -16,11 +18,10 @@
 
 * pipeline-build 의 jenkins 파일 컨텐트를 일단 복사
 
-* 불필요 parameters / triggers 제거
-  - Stage("Prepare") { .. }
-  - triggers { }
+* 불필요 triggers { } 제거
 
-* stages { stage("Prepare") { steps { ... } } } 에 Github Pull Request Builder 트리거 추가
+* stages { stage("Prepare") { steps { ... } } } 를 다음으로 변경
+  - Github Pull Request Builder 트리거 추가
 
             properties([
                     // https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/
@@ -75,6 +76,9 @@
       - Repository URL : git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git
       - Credential : Github SSH키선택 (github-ssh 로 했었음)
       - [중요!!] 고급 > refspec: : +refs/pull/*:refs/remotes/origin/pr/*
-      - Branch Specifier : refs/remotes/${SHA1}
+      - Branch Specifier : */main
     - Script Path : Jenkinsfile-pr
-  - 빌드후 로그 확인
+  - 빌드후 로그 확인. PR builder 가 등록된 이후 다음 브랜치로 변경
+    - SCM > Git
+      - Branch Specifier : refs/remotes/${SHA1}
+    - 빌드후 로그 확인.

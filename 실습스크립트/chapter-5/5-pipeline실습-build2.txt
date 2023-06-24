@@ -103,7 +103,7 @@ def groovy_script() {
 
   - stage('Checkout') { .. } 의 branches 를 다음으로 교체
 
-        branches: [[name: '${params.BRANCH}']]
+        branches: [[name: "${params.BRANCH}"]]
 
   - 반드시 2번 빌드후, 파라미터 입력을 받고, 선택한 브랜치가 선택적으로 빌드 되는지 확인
 
@@ -129,5 +129,18 @@ def groovy_script() {
     when {
         environment name: "GIT_BRANCH", value: "origin/main"
     }
+
+    또는
+
+    // BRANCH_NAME 을 환경 변수에 추가
+    environment {
+        BRANCH_NAME = "$GIT_BRANCH"
+    }
+
+    // branch 는 $BRANCH_NAME 를 인식
+    when {
+        branch "**/main"
+    }
+
 
   - 빌드후 main 일때만 SonarQube 실행 되는지 확인

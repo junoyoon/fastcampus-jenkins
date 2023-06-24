@@ -24,16 +24,16 @@ node {
         echo "SonarScanner"
     }
 
-    stage('Deploy') {
-         echo "Deploy"
-    }
-
     stage('Result') {
          echo "Result"
     }
+
+    stage('Deploy') {
+         echo "Deploy"
+    }
 }
 
-* stage('Prepare') { .. } 에 options / trigger / parameter 추가
+* stage('Prepare') { .. } 에 options / triggers / parameters 추가
 
 properties([
         parameters([
@@ -77,6 +77,7 @@ properties([
                     extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
             )
         }
+
   - 빌드후 잘 체크 아웃 되는지 확인
 
 * 빌드 설정
@@ -167,6 +168,14 @@ def custom_msg(status) {
     return " $status: Job [${env.JOB_NAME}] Logs path: ${env.BUILD_URL}/consoleText"
 }
 
+def groovy_script() {
+  return '''if (BRANCH == "") {
+      return "origin/main 가 빌드 됩니다."
+  } else {
+      return "$BRANCH 가 빌드 됩니다."
+  }'''
+}
+
   - 빌드후 로그 확인
 
-* 이후 Jenkinsfile 을 파일로 관리하면, Checkout stage 사라질 수 있는 것을 확인
+* 이후 Jenkinsfile 을 파일로 관리하면, Checkout stage 사라질 수 있는 것을 설명

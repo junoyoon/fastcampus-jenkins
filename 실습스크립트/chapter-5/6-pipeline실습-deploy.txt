@@ -58,7 +58,7 @@ pipeline {
         skipDefaultCheckout()
     }
 
-  - 빌드후 구성을 눌러, 어떻게 triggers 와 options 가 반영되었는지 확인하기
+  - 빌드후 구성을 눌러, 어떻게  options 가 반영되었는지 확인하기
 
 * 파라미터 셋팅
   - parameters { .. } 를 다음으로 교체

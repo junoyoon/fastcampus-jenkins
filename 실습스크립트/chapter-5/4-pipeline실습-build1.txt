@@ -6,7 +6,13 @@
          -p 4040:4040 \
          ngrok/ngrok:latest http http://jenkins:8080
 
-  http://localhost:4040 을 확인하여, 현재 host 명 확인
+  - http://localhost:4040 을 확인하여, 현재 host 명 확인
+
+  - jenkins 관리 > System > Jenkins URL 을 해당 host 로 수정
+
+  - github webhook 확인 / 잘못된 호스트가 등록되었다면, 수정
+      - https://github.com/[여러분의github계정]/fastcampus-jenkins/settings/hooks
+      - Payload URL : https://[현재 public host명].ngrok-free.app/github-webhook/
 
 * 기존 job 정지
   - practice1-build
@@ -88,8 +94,8 @@ pipeline {
   - triggers 커멘트 제거후 다음 입력
 
     triggers {
-        // pollSCM '*/10 * * * *'
-        githubPush() // GitHub hook trigger for GITScm polling
+        //pollSCM '*/10 * * * *'
+        githubPush() // GitHub hook trigger for GITScm polling.
     }
 
   - options 커멘트 제거후 다음 입력
@@ -159,7 +165,7 @@ pipeline {
         SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
-  - stage('SonarQube') {..} 부분을 다음으로 교체
+  - stage('SonarScanner') {..} 부분을 다음으로 교체
 
         stage('SonarScanner') {
             steps {
@@ -189,7 +195,7 @@ pipeline {
   - 테스트 / jacoco / ktlint / Scm Forensic 결과 처리 추가
   - post { .. } 를 다음으로 교체
 
-    // post 는 stage 마다 실행시킬 수도 있고, 전체가 stages가 완료된 다음에 실행 시킬 수도 있음
+    // post 는 stage 마다 실행시킬 수도 있고, 전체 stages가 완료된 다음에 실행 시킬 수도 있음
     post {
         always {
             scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
