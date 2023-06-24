@@ -1,3 +1,13 @@
+* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요
+
+  docker run -d --rm --name ngrok --hostname ngrok \
+         -e NGROK_AUTHTOKEN=[ngrok에서 발급받은 auth key] \
+         --network=practice \
+         -p 4040:4040 \
+         ngrok/ngrok:latest http http://jenkins:8080
+
+  http://localhost:4040 을 확인하여, 현재 host 명 확인
+
 * 기존 job 정지
   - practice1-build
   - practice1-pr
@@ -89,8 +99,6 @@ pipeline {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
         // github 프로젝트 설정
         githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/[본인GITHUB계정]/fastcampus-jenkins')
-        // 브랜치를 지정하여 체크아웃 할 것이므로, 디폴트 체크아웃 disable
-        skipDefaultCheckout()
     }
 
   - 빌드후 구성을 눌러, 어떻게 triggers 와 options 가 반영되었는지 확인하기
@@ -106,6 +114,10 @@ pipeline {
     - 저장
   - stage('Checkout') { .. } 을 다음으로 대체하기
 
+        /*
+        * Jenkinsfile 을 Repo 에서 가져오도록 설정할 경우, 별도의 Checkout Stage 불필요.
+        * 다음 실습 마지막에 제거 예정
+        */
         stage('Checkout') {
             steps {
                 checkout scmGit(

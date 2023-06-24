@@ -1,0 +1,9 @@
+pipeline {
+    stages {
+        stage("ww") {
+            steps {
+                sh "printenv"
+            }
+        }
+    }
+}

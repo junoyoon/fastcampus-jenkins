@@ -17,54 +17,35 @@
 * pipeline-build 의 jenkins 파일 컨텐트를 일단 복사
 
 * 불필요 parameters / triggers 제거
-  - 파일 초반의 properties(...) 제거
+  - Stage("Prepare") { .. }
   - triggers { }
-  제거
 
 * stages { stage("Prepare") { steps { ... } } } 에 Github Pull Request Builder 트리거 추가
 
-properties([
-        // https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/
-        pipelineTriggers([
-                // PR builder trigger
-                [
-                        $class        : 'GhprbTrigger',
-                        adminlist     : '각자의 Github 계정',
-                        cron: "*/15 * * * *",
-                        permitAll     : false,
-                        useGitHubHooks: true,
-                        triggerPhrase : '.*(test this|build this|deploy this).*',
-                        gitHubAuthId  : '[각자의 github auth id 로 변경]', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
-                        extensions    : [
-                                [
-                                        $class             : 'GhprbSimpleStatus',
-                                        commitStatusContext: 'jenkins',
-                                        showMatrixStatus   : false
-                                ]
-                        ]
-                ]
-        ])
-])
+            properties([
+                    // https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/
+                    pipelineTriggers([
+                            // PR builder trigger
+                            [
+                                    $class        : 'GhprbTrigger',
+                                    adminlist     : '각자의 Github 계정',
+                                    cron: "*/15 * * * *",
+                                    permitAll     : false,
+                                    useGitHubHooks: true,
+                                    triggerPhrase : '.*(test this|build this|deploy this).*',
+                                    gitHubAuthId  : '[각자의 github auth id 로 변경]', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
+                                    extensions    : [
+                                            [
+                                                    $class             : 'GhprbSimpleStatus',
+                                                    commitStatusContext: 'jenkins',
+                                                    showMatrixStatus   : false
+                                            ]
+                                    ]
+                            ]
+                    ])
+            ])
 
-* 체크아웃 GIT BRANCH 를 ${SHA1} 으로 변경 및 refspec 추가
-  - stage('Checkout') { .. } 영역을 다음으로 교체
-
-        stage('Checkout') {
-            steps {
-                checkout scmGit(
-                        branches: [[name: '${SHA1}']],
-                        userRemoteConfigs: [[
-                            credentialsId: '[각자의github ssh key에 대한 credential id]',
-                            url: 'git@github.com:[본인GITHUB계정]/fastcampus-jenkins.git',
-                            // [중요!!]이 부분 반드시 추가
-                            refspec: '+refs/pull/*:refs/remotes/origin/pr/*'
-                        ]],
-                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
-                )
-            }
-        }
-
-* 불필요 테스크 제거
+* 불필요 태스크 제거
   - stage('SonarScanner') { .. } 제거
   - post { always { .. }  } 내의 다음 항목 제거
 

@@ -59,6 +59,8 @@
 
         stage('Prepare') {
             steps {
+                // 어떤 환경변수가 주입되는지 확인
+                sh "printenv"
                 script {
                     properties([
                             parameters([
@@ -105,19 +107,6 @@ def groovy_script() {
 
   - 반드시 2번 빌드후, 파라미터 입력을 받고, 선택한 브랜치가 선택적으로 빌드 되는지 확인
 
-* main 브랜치에만 SonarQube 실행
-  - stage("SonarQube") {  바로 뒤에 다음 조건 주가
-
-    when {
-        expression {
-            // GIT_BRANCH 또는 BRANCH_NAME 는 Jenkinsfile 을 git 으로부터 checkout 할때만 사용 가능
-            // 대신 파라미터로 받는 BRANCH 활용
-            return params.BRANCH == "origin/main"
-        }
-    }
-
-  - 빌드후 main 일때만 SonarQube 실행 되는지 확인
-
 * 파이프라인을 파일로 관리
   - 지금까지 작성한 파이프라인 스크립트를 github repo 의 main 브랜치의 /Jenkinsfile-build 에 저장후 커밋/푸시
   - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
@@ -130,9 +119,15 @@ def groovy_script() {
   - pipeline-deploy > 구성 > Pipeline > Pipeline script from SCM
     - Branch Specifier : refs/remotes/${BRANCH}
   - 빌드후 정상 동작 확인
+  - 만약 여기서 Sparse Checkout 을 할 경우, Jenkinsfile-build 는 체크아웃 하는 디렉토리내에 있어야 함
 
-* GIT_BRANCH / BRANCH_NAME 환경 변수 확인
-  * stage("Checkout") { steps {  } } 다음 환경 변수 추가하여 정상 동작 확인
-    echo "$BRANCH_NAME"
-    echo "$GIT_BRANCH"
-  * options 에 skipDefaultCheckout() 제거후 빌드 정상 동작 확인
+* Jenkinsfile-build 에서 Checkout Step 제거
+
+* main 브랜치에만 SonarQube 실행
+  - stage("SonarQube") {  바로 뒤에 다음 조건 주가
+
+    when {
+        environment name: "GIT_BRANCH", value: "origin/main"
+    }
+
+  - 빌드후 main 일때만 SonarQube 실행 되는지 확인

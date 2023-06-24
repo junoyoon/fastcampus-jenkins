@@ -8,10 +8,13 @@
 
 node {
 
+    stage('Prepare') {
+        echo "Prepare"
+    }
+
     stage('Checkout') {
         echo "Checkout"
     }
-
 
     stage('Build') {
         echo "Build"
@@ -30,7 +33,7 @@ node {
     }
 }
 
-* node { 의 제일 앞에 options / trigger / parameter 추가
+* stage('Prepare') { .. } 에 options / trigger / parameter 추가
 
 properties([
         parameters([
@@ -56,7 +59,7 @@ properties([
         ]),
         pipelineTriggers([
             // pollSCM('*/10 * * * *')
-            [$class: 'GitHubPushTrigger']
+            githubPush()
         ]),
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')),
         githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
@@ -166,3 +169,4 @@ def custom_msg(status) {
 
   - 빌드후 로그 확인
 
+* 이후 Jenkinsfile 을 파일로 관리하면, Checkout stage 사라질 수 있는 것을 확인
