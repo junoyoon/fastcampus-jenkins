@@ -1,0 +1,153 @@
+* gradlew 활용 pipeline 생성
+    - 이름 : gradle-cache
+    - 타입 : Pipeline
+  - pipeline 에 다음을 입력후 빌드
+
+pipeline {
+    agent {
+        kubernetes {
+            yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: build
+            image: amazoncorretto:17
+           # image: gradle:7.6.1-jdk17
+            command:
+            - sleep
+            args:
+            - 99d
+
+         #   volumeMounts:
+         #   - name: gradle-dependency-volume
+         #     mountPath: /home/gradle/.gradle
+         # volumes:
+         #  - name: gradle-dependency-volume
+         #    hostPath:
+         #      path: /root/${JOB_BASE_NAME}/gradle-dependency   # 해당 디렉토리가 존재해야 합니다.
+         #      type: DirectoryOrCreate
+        """
+        }
+    }
+    stage('Run gradle') {
+        steps {
+            container('build') {
+                checkout scmGit(
+                        branches: [[name: 'origin/main']],
+                        userRemoteConfigs: [[
+                                credentialsId: 'github-ssh',
+                                url          : 'git@github.com:[각자의 github 계정/fastcampus-jenkins.git']
+                        ],
+                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                )
+
+                sh 'printenv'
+                dir("projects/spring-app") {
+                    sh "ls -al"
+                    /*
+                    writeFile(
+                       file:"settings.gradle.kts",
+                       text: """
+                            buildCache {
+                                remote<HttpBuildCache> {
+                                     url = uri("http://build-cache-node:5071/cache/")
+                                     isPush = true
+                                     setAllowInsecureProtocol(true)
+                                }
+                            }
+                            """
+                    ) */
+
+                    withEnv(['SLOW_TEST_ENABLED=true']) {
+                        timestamps {
+                            sh './gradlew build'
+                            sh './gradlew clean build'
+
+                            // sh 'gradle build'
+                            // sh 'gradle clean build'
+
+                            // sh 'gradle --build-cache build'
+                            // sh 'gradle --build-cache clean build'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+* gradle 이미지를 사용하여 gradle 다운로드 속도 개선
+   - 이미지를 기존 amazoncorretto 에서 gradle 로 변경
+
+        // image: amazoncorretto:17
+        image: gradle:7.6.1-jdk17
+
+   - 빌드 실행 방법을 ./gradlew 에서 gradle 로 변경
+
+        sh 'gradle build'
+        sh 'gradle clean build'
+
+   - 빌드후 속도 개선 확인
+
+* gradle dependency 다운로드 폴더를 호스트로 볼륨 맵핑
+   - 다음 영역 커멘트 제거
+
+                    volumeMounts:
+                    - name: gradle-dependency-volume
+                      mountPath: /home/gradle/.gradle
+                  volumes:
+                   - name: gradle-dependency-volume
+                     hostPath:
+                       path: /root/${JOB_BASE_NAME}/gradle-dependency   # 해당 디렉토리가 존재해야 합니다.
+                       type: DirectoryOrCreate
+
+   - 빌드후 속도 개선 확인
+
+* gradle build cache 사용
+   - gradle 빌드를 다음으로 수정
+
+     sh 'gradle --build-cache build'
+     sh 'gradle --build-cache clean build'
+
+   - 2회 빌드후 실행 결과 확인
+
+* gradle remote build cache 사용
+  - 빌드 캐시 서버 실행
+
+    docker run --detach --rm \
+        --hostname build-cache-node \
+        --name build-cache-node \
+        --network practice \
+        --volume ~/practice/build-cache-node:/data \
+        --publish 5071:5071 \
+        gradle/build-cache-node:15.0 \
+        start
+
+  - build-cache-node ID/PW 변경
+    - docker logs build-cache-node 로 username / password 확인
+    - build-cache-node 접근
+      - http://localhost:5071
+      - 위 username / password 로 로그인
+      - 패스워드 변경
+        - UI access control
+        - username / password 입력후 저장
+
+  - pipeline 에 리모트 빌드 설정 추가를 위해 아래 영역 커멘트 제거
+
+        writeFile(
+               file:"settings.gradle.kts",
+               text: """
+                  buildCache {
+                      remote<HttpBuildCache> {
+                           url = uri("http://build-cache-node:5071/cache/")
+                           isPush = true
+                           setAllowInsecureProtocol(true)
+                      }
+                  }
+                  """
+        )
+
+  - 두번 빌드하여 빌드 속도 확인
+  - cache 변화 확인
+    - http://localhost:5071

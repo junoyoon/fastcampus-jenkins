@@ -1,0 +1,198 @@
+* 미니 kubernetes 환경(kind) 설치
+  - https://kind.sigs.k8s.io/docs/user/quick-start/#installation 를 참고하여 kind 설치
+  - mac
+     - kubectl 설치
+       - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
+     - kind 설치
+        # 테스트용 kube 배포본인 kind 설치
+        brew install kind
+
+        # 클러스터 생성. jenkins 에 접근할 수 있도록 practice network 사용
+        export KIND_EXPERIMENTAL_DOCKER_NETWORK=practice
+        kind create cluster --name jenkins
+
+        # jenkins 네임스페이스 생성
+        kubectl create namespace jenkins
+
+        # 서비스 계정 생성
+        kubectl create serviceaccount jenkins --namespace jenkins
+
+# 접근 토큰 생성
+kubectl create  -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jenkins-secret
+  namespace: jenkins
+  annotations:
+    kubernetes.io/service-account.name: jenkins
+type: kubernetes.io/service-account-token
+EOF
+
+    # 토큰 확인 및 복사
+    kubectl describe secret jenkins-secret --namespace jenkins
+
+    # jenkins account 에 admin 권한 부여
+    kubectl create rolebinding jenkins-admin-binding --clusterrole=admin --serviceaccount=jenkins:jenkins --namespace jenkins
+
+* Jenkins kubernetes 플러그인 설정
+  - kubernetes 플러그인 설치
+  - Add new cloud > Kubernetes
+    - Name : k8s
+    - Kubernetes Cloud details
+      - Kubernetes URL : https://jenkins-control-plane:6443
+      - Disable https certificate check
+      - Kubernetes Namespace : jenkins
+      - Credentials > Add > Secret text
+        - Secret : 생성한 token 기입
+        - ID: k8s-jenkins-token
+        - Description : k8s-jenkins-token
+        - 저장후, 선택
+      - Test Connection 실행
+      - Jenkins URL : http://jenkins:8080
+      - 저장
+
+* sample kubernetes pipeline 생성
+    - 이름 : multinode-k8s
+    - 타입 : Pipeline
+  - pipeline 에 다음을 입력후 빌드
+
+pipeline {
+  agent none
+  stages {
+    stage('Build') {
+        agent {
+            kubernetes {
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: openjdk1
+                    image: openjdk
+                    command:
+                    - sleep
+                    args:
+                    - 99d
+                  - name: openjdk2
+                    image: openjdk
+                    command:
+                    - sleep
+                    args:
+                    - 99d
+                '''
+            }
+        }
+        steps {
+      	  container('openjdk1') {
+      	     // build 라고 가정
+         	 sh 'printenv'
+         	 sh 'touch app.jar'
+       	  }
+
+          container('openjdk2') {
+             sh 'ls -al'
+             // stash includes: 'app.jar', name: 'BUILD_OUTPUT'
+          }
+       }
+    }
+
+    stage('Packaging') {
+        agent {
+            kubernetes {
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: packaging
+                    image: openjdk
+                    command:
+                    - sleep
+                    args:
+                    - 99d
+                '''
+            }
+        }
+        steps {
+          container('packaging') {
+             // unstash 'BUILD_OUTPUT'
+             sh 'ls -al'
+             sh 'echo "FROM openjdk:20-ea-17-bullseye\nCOPY app.jar app.jar" > Dockerfile'
+             // sh 'docker build . -t hello-world'
+          }
+       }
+    }
+  }
+}
+
+* pod 간 파일 공유 처리
+  - 다음 커멘트 제거
+    // stash includes: 'a.txt', name: 'A_TXT'
+    // unstash 'BUILD_OUTPUT'
+  - 빌드후 파일 존재함을 확인
+  - 다음 커멘트 제거
+    // sh 'docker build . -t hello-world'
+  - 빌드후 docker 실행 불가 확인
+
+* Docker Image 빌드 설정
+  - Package 단계에서 Docker 이미지 빌드
+    - stage('Packaging') {  .. } 을 다음으로 교체
+
+      stage('Packaging') {
+        agent {
+            kubernetes {
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: kaniko
+                    image: gcr.io/kaniko-project/executor:debug
+                    command:
+                    - sleep
+                    args:
+                    - 9999999
+                '''
+            }
+        }
+
+        steps {
+            container(name: 'kaniko', shell: '/busybox/sh') {
+
+              unstash 'BUILD_OUTPUT'
+              sh '''#!/busybox/sh
+                    echo "FROM openjdk:20-ea-17-bullseye\nCOPY app.jar app.jar" > Dockerfile
+                    /kaniko/executor --log-format text --no-push --context `pwd` --destination hello-world:latest
+              '''
+            }
+       }
+    }
+* kaniko 를 kubernetes pod template 으로 사용
+   - pod 템플릿 설정
+      - http://localhost:8080/manage/configureClouds/ > Kubernetes > Add Pod Template
+        - Name : kaniko
+        - Namespace : jenkins
+        - Label : kaniko
+        - Containers > Add Container
+          - Name: kaniko
+          - Docker image: gcr.io/kaniko-project/executor:debug
+          - Working directory: /workspace
+          - Command to run : sleep
+          - Argument to pass the command : 9999999
+        - 저장
+  - kubernetes pod template 을 사용하도록 수정
+    - stage('Run kaniko') { agent {..} } 블록 변경
+
+    agent {
+        label "kaniko"
+    }
+
+  - 빌드후 로그 확인
+
+* 실습 정리
+  - cluster 제거
+    kind delete cluster --name jenkins
+
+  - kind 불필요시 제거
+    - mac : brew uninstall kind

@@ -1,0 +1,150 @@
+* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요
+
+  docker run -d --rm --name ngrok --hostname ngrok \
+         -e NGROK_AUTHTOKEN=[ngrok에서 발급받은 auth key] \
+         --network=practice \
+         -p 4040:4040 \
+         ngrok/ngrok:latest http http://jenkins:8080
+
+  - http://localhost:4040
+  - jenkins URL명 재확인. 기존과 바뀌었다면 다음에서 URL 변경
+    - Jenkins 설정 > System > Jenkins URL
+
+* AWS EC2 VM 발급
+  - aws 로그인
+    - https://console.aws.amazon.com/console/home?nc2=h_ct&src=header-signin
+    - 루트 사용자로 로그인 - 만약 sub 계정을 발급 받았다면, ec2 에 대한 admin 권한이 있는지 확인후 로그인 가능
+  - EC2 인스턴스 시작 (서울 region)
+    - https://ap-northeast-2.console.aws.amazon.com/ec2/home?region=ap-northeast-2#LaunchInstances:
+    - 이름 : jenkins-agent
+    - AMI : Amazon Linux 선택
+    - 인스턴스 유형 : t2.medium
+    - 키페어 이름
+      - 만약 기존에 사용하던 키페어가 있다면 그 키페어 사용
+      - 없다면 새 키페어 생성 (fastcampus-jenkins 로 이름 지정)
+      - 다운 받은 파일을 ~/practice/fastcampus-jenkins.pem 에 저장해 둠
+    - 네트워크 설정
+      - 보안그룹 생성
+      - 에서 SSH 트래픽 허용 체크
+    - 인스턴스 시작
+* 생성된 instance 에 java 설치
+  - 생성된 인스턴스의 정보 기록
+    - 퍼블릭 IP4 DNS
+    - 서브넷 ID :
+    - AMI ID :
+    - 보안 > 보안 그룹 이름 :
+  - https://ap-northeast-2.console.aws.amazon.com/ec2/home?region=ap-northeast-2#Instances:
+  - 생성된 인스턴스를 클릭하여 연결 클릭 > 다음화면에서 바로 연결
+  - java 설치
+    sudo yum install -y java-17-amazon-corretto-devel.x86_64 git
+  - 홈 디렉토리 확인
+    echo $HOME
+
+* Permanent Agent 추가
+  - http://localhost:8080/manage/computer/
+  - New 노드
+    - 노드명 : vm
+    - Permanent Agent
+    - Create 클릭
+    - Remote root directory : /home/ec2-user
+    - Label: vm
+    - Launch methods : Launch agent by connecting it to controller
+      - Use Websocket 클릭
+    - 저장
+ - vm 클릭
+   - Run from agent command line: (Unix) 화면 하단의 커멘드 복사
+
+* Inbound Agent 실행
+  - curl -sO https://[public host name]/jnlpJars/agent.jar \
+    java -jar agent.jar -jnlpUrl https://[public host name]/computer/vm/jenkins-agent.jnlp \
+    -secret [자동생성된secret] -workDir "/home/ec2-user"
+
+* Agent 상태 확인
+  - http://localhost:8080/computer/vm/
+
+* 신규 pipeline 생성
+  - http://localhost:8080/view/all/newJob
+    - 이름 : multinode-vm
+    - 타입 : Pipeline
+  - pipeline 에 다음을 입력후 빌드
+
+pipeline {
+    agent {
+        label "vm"
+    }
+    stages {
+        stage("touch") {
+            steps {
+                sh "touch a.txt"
+            }
+        }
+
+        stage("archive") {
+            steps {
+                archiveArtifacts artifacts: 'a.txt', followSymlinks: false
+            }
+        }
+    }
+}
+
+* workspace 공유 확인
+  - vm 을 명확히 agent 로 지정하지 않을 경우 동작하지 않도록 수정
+    - http://localhost:8080/computer/vm/
+      - Usage : Only build jobs with label expressions matching this node
+      - 저장
+  - 여러개의 agent 를 사용하도록 pipeline 변경
+    - http://localhost:8080/job/multinode-vm/configure
+
+pipeline {
+
+    agent any
+
+    stages {
+        stage("touch") {
+            agent {
+                 label "vm"
+            }
+            steps {
+                sh "pwd; touch a.txt; ls -al"
+            }
+        }
+
+        stage("archive") {
+            steps {
+                sh "pwd; ls -al"
+                archiveArtifacts artifacts: 'a.txt', followSymlinks: false
+            }
+        }
+    }
+}
+     - 서로 workspace 공유하지 않음. 단 jenkins file 을 repo 에 지정할 경우, 해당 git 컨텐트는 모든 노드에 설치
+
+* 기존 에이전트 프로세스 정지
+
+* Outbound agent 실행
+  - http://localhost:8080/computer/vm/configure
+      - Launch method : Launch agents via SSH
+      - VM 호스트명 기재
+      - Credentials > Add
+        - SSH Username with private key
+        - ID : multinode-vm-ssh
+        - Description : multinode-vm-ssh
+        - Username : ec2-user
+        - Private Key
+          - Enter directly
+          - 다운받은 키페어 입력
+        - 저장
+        - ec2-user 선택
+      - Host Key Verification Strategy
+        - Non verifying Verification Strategy
+      - 저장
+      - Relaunch agent 클릭
+  - 로그 확인
+    - http://localhost:8080/computer/vm/log
+  - multinode-vm 빌드 및 로그 확인
+    - http://localhost:8080/job/multinode-vm/
+  - vm 연결 끊기
+    - http://localhost:8080/manage/computer/vm/
+    - 연결끊기
+
+* AWS EC2 에서 사용한 VM 을 정지 처리

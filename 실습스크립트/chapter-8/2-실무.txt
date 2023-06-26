@@ -1,0 +1,44 @@
+* AWS 에 EKS 설치
+  - aws cli 도구 설치
+      - https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/getting-started-install.html
+      를 참고하여 OS 별 설치
+      - 암호 설정
+        > aws configure
+        AWS Access Key : 기존 발급 받은 Access Key 입력
+        AWS Secret Access Key : 기존 발급 받은 Secret Access Key  입력
+        Default region name : ap-northeast-2
+        Default output format : 엔터
+  - kubectl 설치
+      - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
+  - elsctl 설치
+      - https://github.com/weaveworks/eksctl/blob/main/README.md#installation 를 참고하여 OS 별 설치
+      - mac 유저는 : brew install eksctl 로 설치 가능
+  - pub key 확보
+    cd ~/practice
+    chmod 400 fastcampus-jenkins.pem
+    ssh-keygen -y -f fastcampus-jenkins.pem > fastcampus-jenkins.pub
+
+* eks 생성
+
+eksctl create cluster \
+    --name fastcampus-jenkins-eks \
+    --version 1.27 \
+    --region ap-northeast-2 \
+    --nodegroup-name jenkins-agents \
+    --nodes 1 \
+    --nodes-min 1 \
+    --nodes-max 3 \
+    --ssh-access \
+    --ssh-public-key fastcampus-jenkins.pub \
+    --managed \
+    --node-type t2.medium
+
+
+eksctl create cluster \
+    --name fastcampus-jenkins-eks \
+    --version 1.27 \
+    --region ap-northeast-2 \
+    --fargate
+
+  - 생성 로그 확인
+    - https://ap-northeast-2.console.aws.amazon.com/eks/home?region=ap-northeast-2#/clusters/fastcampus-jenkins-eks

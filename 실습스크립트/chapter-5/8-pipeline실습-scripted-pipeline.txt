@@ -62,7 +62,7 @@ properties([
             githubPush()
         ]),
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')),
-        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/[각자의계정]/fastcampus-jenkins')
 ])
 
 * 체크아웃 설정
@@ -134,7 +134,6 @@ properties([
                         wait: false,
                         propagate: false
                 )
-            }
         }
     }
 

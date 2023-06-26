@@ -1,0 +1,89 @@
+* gradlew 활용 pipeline 생성
+    - 이름 : concurrent-build
+    - 타입 : Pipeline
+  - pipeline 에 다음을 입력
+
+
+pipeline {
+    agent any
+    stages {
+        stage('Run gradle') {
+            steps {
+                checkout scmGit(
+                        branches: [[name: 'origin/main']],
+                        userRemoteConfigs: [[
+                            credentialsId: 'github-ssh',
+                            url          : 'git@github.com:[각자의 github 계정]/fastcampus-jenkins.git']
+                        ],
+                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                )
+
+                dir("projects/spring-app") {
+                    withEnv(['SLOW_TEST_ENABLED=true']) {
+                        timestamps {
+                            sh './gradlew clean build'
+                            // sh './gradlew clean build --parallel'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+  - 저장후 여러번 빌드
+
+* 하나의 pipeline 의 Concurrent 빌드 막기
+  - Pipeline 구성 > General > Do not allow concurrent builds 체크
+  - 저장후 여러번 빌드
+
+* gradle parallel 빌드 활성화
+    - Pipeline 구성 > pipeline
+    - 다음 코드를 커멘트 아웃 하고 기존 gradlew 는 커멘트 처리
+
+                sh './gradlew clean build --parallel'
+
+    - 빌드후 테스트
+
+* 공유 리소스 락 걸기
+  - Lockable Resources 설치
+  - Jenkins 관리 > 시스템 > Lockable Resources Manager > Add Lockable Resource
+    - 리소스 3개 추가
+      - Name : db1
+      - Labels : spring-app-unittest-db
+      - Name : db2
+      - Labels : spring-app-unittest-db
+      - Name : db3
+      - Labels : spring-app-unittest-db
+
+* 공유 리소스 락을 사용하도록 pipeline 수정
+  - 관련 코드 확인
+    - https://github.com/fastcampus-jenkins/fastcampus-jenkins/blob/main/projects/spring-app/src/test/kotlin/com/fastcampus/demo/DemoApplicationTests.kt
+
+  - stage('Run gradle') { steps {... } } 를 다음으로 변경
+
+        steps {
+                checkout scmGit(
+                        branches: [[name: 'origin/main']],
+                        userRemoteConfigs: [[
+                            credentialsId: 'github-ssh',
+                            url          : 'git@github.com:[각자의 github 계정]/fastcampus-jenkins.git']
+                        ],
+                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                )
+
+                // 해당 label 을 가진 리소스들 중에서 1개를 패치하고, 패치된 리소스명을 DB에 저장
+                lock(label: 'spring-app-unittest-db', quantity : 1, variable: 'DB') {
+                    dir("projects/spring-app") {
+                        withEnv(["SLOW_TEST_ENABLED=true", "SPRING_PROFILES_ACTIVE=${env.DB}"]) {
+                            timestamps {
+                                // sh './gradlew build'
+                                sh './gradlew clean build --parallel'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+  - 빌드의 > Test Report 로 이동하여 테스트 정보 확인

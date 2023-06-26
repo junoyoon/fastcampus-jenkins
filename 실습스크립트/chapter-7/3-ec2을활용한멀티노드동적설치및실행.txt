@@ -1,0 +1,78 @@
+* AWS EC2 플러그인 설치 및 설정
+  - Jenkins 에 Amazon EC2 플러그인 설치
+  - aws 액세스 키 생성
+    - https://us-east-1.console.aws.amazon.com/iamv2/home?region=us-east-1#/security_credentials
+    - 액세스 키 > 액세스 키 만들기
+       - 루트 액세스 키를 생성하는 것이 모범 사례는 아니지만 여전히 생성하려고 합니다. 체크후 진행
+    - 액세스 키와 비밀 액세스 키 복사
+  - Jenkins 에 EC2 연동 설정
+    - http://localhost:8080/manage/configureClouds/
+    - Add a new cloud : EC2 선택
+      - Name : aws-ec2
+      - Amazon EC2 Credentials > Add > Jenkins
+        - AWS Credentials
+        - ID : aws-ec2-root-key
+        - Description : aws-ec2-root-key
+        - Access Key ID : 생성한 액세스 키
+        - Secret Access Key : 생성한 비밀 액세스 키
+        - Add
+        - aws-ec2-root-key 선택
+      - Region : ap-northeast-2
+      - EC2 Key Pair's Private Key : ec2-user (multinode-vm-ssh)
+      - Test Connection
+      - AMIs > 추가
+        - Description : aws-ec2-amazonlinux
+        - AMI ID : 기존에 적어둔 ID 기재
+        - Instance Type : T2Medium
+        - Security group names : 기존에 적어둔 보안그룹 명(ID 아님) 기재
+        - Remote FS Root : /home/ec2-user
+        - Remote user : ec2-user
+        - AMI Type : unix
+        - lables : aws-ec2
+        - Init script
+          sudo yum install -y java-17-amazon-corretto-devel.x86_64 git
+        - 고급
+          - Number of Executors : 2
+          - Connection Strategy : Public DNS
+          - Host Key Verification Strategy : accept-new
+        - 저장
+  - ec2 provision
+    - http://localhost:8080/manage/computer/
+    - Provision via aws-ec2 클릭
+    - See log for more details 로그 클릭
+    - 인스턴스 실행 현황 확인
+      - https://ap-northeast-2.console.aws.amazon.com/ec2/home?region=ap-northeast-2#Instances:
+
+* aws-ec2 활용 pipeline 생성 및 실행
+    - 이름 : multinode-aws-ec2
+    - 타입 : Pipeline
+  - pipeline 에 다음을 입력후 빌드
+
+pipeline {
+    agent {
+        label "aws-ec2"
+    }
+    stages {
+        stage("touch") {
+            steps {
+                sh "touch a.txt"
+            }
+        }
+
+        stage("archive") {
+            steps {
+                archiveArtifacts artifacts: 'a.txt', followSymlinks: false
+            }
+        }
+    }
+}
+  - 로그 확인
+  - http://localhost:8080/computer/ 로 이동하여, provision 현황 확인
+
+* 실습 정리
+  - provision 된 VM shutdown
+    - http://localhost:8080/computer/
+    - 해당 VM 선택하여 Delete Agent
+  - ec2 provision shutdown
+    - http://localhost:8080/configureClouds/
+    - instance Cap : 0 또는 aws ec2 설정 삭제
