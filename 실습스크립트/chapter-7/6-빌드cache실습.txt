@@ -1,7 +1,11 @@
-* gradlew 활용 pipeline 생성
+* 실습 pipeline 생성
     - 이름 : gradle-cache
     - 타입 : Pipeline
   - pipeline 에 다음을 입력후 빌드
+
+
+// agent 구문에서 활용하기 위해 global 로 선언
+def PROJECT_NAME="spring-app"
 
 pipeline {
     agent {
@@ -25,50 +29,53 @@ pipeline {
          # volumes:
          #  - name: gradle-dependency-volume
          #    hostPath:
-         #      path: /root/${JOB_BASE_NAME}/gradle-dependency   # 해당 디렉토리가 존재해야 합니다.
+         #      path: /root/${PROJECT_NAME}/gradle-dependency
          #      type: DirectoryOrCreate
         """
         }
     }
-    stage('Run gradle') {
-        steps {
-            container('build') {
-                checkout scmGit(
-                        branches: [[name: 'origin/main']],
-                        userRemoteConfigs: [[
-                                credentialsId: 'github-ssh',
-                                url          : 'git@github.com:[각자의 github 계정/fastcampus-jenkins.git']
-                        ],
-                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
-                )
 
-                sh 'printenv'
-                dir("projects/spring-app") {
-                    sh "ls -al"
-                    /*
-                    writeFile(
-                       file:"settings.gradle.kts",
-                       text: """
-                            buildCache {
-                                remote<HttpBuildCache> {
-                                     url = uri("http://build-cache-node:5071/cache/")
-                                     isPush = true
-                                     setAllowInsecureProtocol(true)
+    stages {
+        stage('Run gradle') {
+            steps {
+                container('build') {
+                    checkout scmGit(
+                            branches: [[name: 'origin/main']],
+                            userRemoteConfigs: [[
+                                    credentialsId: 'github-ssh',
+                                    url          : 'git@github.com:[각자의 github 계정/fastcampus-jenkins.git']
+                            ],
+                            extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
+                    )
+
+                    sh 'printenv'
+                    dir("projects/spring-app") {
+                        sh "ls -al"
+                        /*
+                        writeFile(
+                           file:"settings.gradle.kts",
+                           text: """
+                                buildCache {
+                                    remote<HttpBuildCache> {
+                                         url = uri("http://build-cache-node:5071/cache/")
+                                         isPush = true
+                                         setAllowInsecureProtocol(true)
+                                    }
                                 }
+                                """
+                        ) */
+
+                        withEnv(['SLOW_TEST_ENABLED=true']) {
+                            timestamps {
+                                sh './gradlew build'
+                                sh './gradlew clean build'
+
+                                // sh 'gradle build'
+                                // sh 'gradle clean build'
+
+                                // sh 'gradle --build-cache build'
+                                // sh 'gradle --build-cache clean build'
                             }
-                            """
-                    ) */
-
-                    withEnv(['SLOW_TEST_ENABLED=true']) {
-                        timestamps {
-                            sh './gradlew build'
-                            sh './gradlew clean build'
-
-                            // sh 'gradle build'
-                            // sh 'gradle clean build'
-
-                            // sh 'gradle --build-cache build'
-                            // sh 'gradle --build-cache clean build'
                         }
                     }
                 }
@@ -77,7 +84,7 @@ pipeline {
     }
 }
 
-* gradle 이미지를 사용하여 gradle 다운로드 속도 개선
+* gradle 다운로드 속도 개선
    - 이미지를 기존 amazoncorretto 에서 gradle 로 변경
 
         // image: amazoncorretto:17
@@ -90,7 +97,7 @@ pipeline {
 
    - 빌드후 속도 개선 확인
 
-* gradle dependency 다운로드 폴더를 호스트로 볼륨 맵핑
+* gradle dependency 다운로드 속도 개선
    - 다음 영역 커멘트 제거
 
                     volumeMounts:
@@ -151,3 +158,10 @@ pipeline {
   - 두번 빌드하여 빌드 속도 확인
   - cache 변화 확인
     - http://localhost:5071
+
+* 실습 정리
+  - cluster 제거
+    kind delete cluster
+
+  - kind 불필요시 제거
+    - mac : brew uninstall kind

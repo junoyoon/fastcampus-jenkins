@@ -1,8 +1,7 @@
-* gradlew 활용 pipeline 생성
+* 실습 pipeline 생성
     - 이름 : concurrent-build
     - 타입 : Pipeline
   - pipeline 에 다음을 입력
-
 
 pipeline {
     agent any
@@ -33,7 +32,7 @@ pipeline {
 
   - 저장후 여러번 빌드
 
-* 하나의 pipeline 의 Concurrent 빌드 막기
+* Concurrent 빌드 설정 확인
   - Pipeline 구성 > General > Do not allow concurrent builds 체크
   - 저장후 여러번 빌드
 
@@ -45,7 +44,7 @@ pipeline {
 
     - 빌드후 테스트
 
-* 공유 리소스 락 걸기
+* 공유 리소스 락 설정
   - Lockable Resources 설치
   - Jenkins 관리 > 시스템 > Lockable Resources Manager > Add Lockable Resource
     - 리소스 3개 추가

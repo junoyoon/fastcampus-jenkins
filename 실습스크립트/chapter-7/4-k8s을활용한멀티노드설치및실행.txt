@@ -1,21 +1,24 @@
 * 미니 kubernetes 환경(kind) 설치
-  - https://kind.sigs.k8s.io/docs/user/quick-start/#installation 를 참고하여 kind 설치
-  - mac
-     - kubectl 설치
-       - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
-     - kind 설치
+  - 여기서 설치할 kind 는 꽤 메모리를 많이 잡아먹으므로 불필요 어플리케이션 정지 필요
+
+    docker kill sonarqube
+    docker kill server_1
+
+  - 설치 방법
+    - kubectl 설치
+            - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
+    - kind 설치
+      - https://kind.sigs.k8s.io/docs/user/quick-start/#installation 참고
+      - mac
         # 테스트용 kube 배포본인 kind 설치
         brew install kind
 
         # 클러스터 생성. jenkins 에 접근할 수 있도록 practice network 사용
         export KIND_EXPERIMENTAL_DOCKER_NETWORK=practice
-        kind create cluster --name jenkins
-
-        # jenkins 네임스페이스 생성
-        kubectl create namespace jenkins
+        kind create cluster
 
         # 서비스 계정 생성
-        kubectl create serviceaccount jenkins --namespace jenkins
+        kubectl create serviceaccount jenkins
 
 # 접근 토큰 생성
 kubectl create  -f - <<EOF
@@ -23,30 +26,28 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: jenkins-secret
-  namespace: jenkins
   annotations:
     kubernetes.io/service-account.name: jenkins
 type: kubernetes.io/service-account-token
 EOF
 
     # 토큰 확인 및 복사
-    kubectl describe secret jenkins-secret --namespace jenkins
+    kubectl describe secret jenkins-secret --namespace kind
 
     # jenkins account 에 admin 권한 부여
-    kubectl create rolebinding jenkins-admin-binding --clusterrole=admin --serviceaccount=jenkins:jenkins --namespace jenkins
+    kubectl create rolebinding jenkins-admin-binding --clusterrole=admin --serviceaccount=default:jenkins
 
 * Jenkins kubernetes 플러그인 설정
   - kubernetes 플러그인 설치
   - Add new cloud > Kubernetes
     - Name : k8s
     - Kubernetes Cloud details
-      - Kubernetes URL : https://jenkins-control-plane:6443
+      - Kubernetes URL : https://kind-control-plane:6443
       - Disable https certificate check
-      - Kubernetes Namespace : jenkins
       - Credentials > Add > Secret text
         - Secret : 생성한 token 기입
-        - ID: k8s-jenkins-token
-        - Description : k8s-jenkins-token
+        - ID: k8s-token
+        - Description : k8s-token
         - 저장후, 선택
       - Test Connection 실행
       - Jenkins URL : http://jenkins:8080
@@ -190,9 +191,4 @@ pipeline {
 
   - 빌드후 로그 확인
 
-* 실습 정리
-  - cluster 제거
-    kind delete cluster --name jenkins
-
-  - kind 불필요시 제거
-    - mac : brew uninstall kind
+* kind와 생성한 k8s cluster 는 다음 실습에서 사용후 정리 예정
