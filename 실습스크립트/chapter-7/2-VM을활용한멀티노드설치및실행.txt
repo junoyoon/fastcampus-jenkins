@@ -1,4 +1,4 @@
-* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요
+* 이번 실습은 jenkins 를 public 으로 노출하기 위한 ngrok 필요 (chapter4 > 2번 실습 참고)
 
   docker run -d --rm --name ngrok --hostname ngrok \
          -e NGROK_AUTHTOKEN=[ngrok에서 발급받은 auth key] \
@@ -30,10 +30,10 @@
 
 * 생성된 instance 에 java 설치
   - 생성된 인스턴스의 정보 기록
-    - 퍼블릭 IP4 DNS
-    - 서브넷 ID :
-    - AMI ID :
-    - 보안 > 보안 그룹 이름 :
+    - 퍼블릭 IP4 DNS : ec2-13-125-220-158.ap-northeast-2.compute.amazonaws.com
+    - 서브넷 ID : subnet-59bf2a32
+    - AMI ID :  ami-0462a914135d20297
+    - 보안 > 보안 그룹 이름 : launch-wizard-7
   - https://ap-northeast-2.console.aws.amazon.com/ec2/home?region=ap-northeast-2#Instances:
   - 생성된 인스턴스를 클릭하여 연결 클릭 > 다음화면에서 바로 연결
   - java 설치

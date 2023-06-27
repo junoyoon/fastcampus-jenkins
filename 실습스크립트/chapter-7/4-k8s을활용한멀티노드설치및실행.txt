@@ -6,7 +6,7 @@
 
   - 설치 방법
     - kubectl 설치
-            - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
+      - https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html 를 참고하여 OS 별 설치
     - kind 설치
       - https://kind.sigs.k8s.io/docs/user/quick-start/#installation 참고
       - mac
@@ -32,7 +32,7 @@ type: kubernetes.io/service-account-token
 EOF
 
     # 토큰 확인 및 복사
-    kubectl describe secret jenkins-secret --namespace kind
+    kubectl describe secret jenkins-secret
 
     # jenkins account 에 admin 권한 부여
     kubectl create rolebinding jenkins-admin-binding --clusterrole=admin --serviceaccount=default:jenkins
@@ -129,7 +129,7 @@ pipeline {
 
 * pod 간 파일 공유 처리
   - 다음 커멘트 제거
-    // stash includes: 'a.txt', name: 'A_TXT'
+    // stash includes: 'app.jar', name: 'BUILD_OUTPUT'
     // unstash 'BUILD_OUTPUT'
   - 빌드후 파일 존재함을 확인
   - 다음 커멘트 제거
@@ -169,11 +169,12 @@ pipeline {
             }
        }
     }
+
 * kaniko 를 kubernetes pod template 으로 사용
    - pod 템플릿 설정
       - http://localhost:8080/manage/configureClouds/ > Kubernetes > Add Pod Template
         - Name : kaniko
-        - Namespace : jenkins
+        - Namespace :
         - Label : kaniko
         - Containers > Add Container
           - Name: kaniko

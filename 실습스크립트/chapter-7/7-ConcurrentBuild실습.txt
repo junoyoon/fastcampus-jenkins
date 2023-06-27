@@ -78,11 +78,19 @@ pipeline {
                             timestamps {
                                 // sh './gradlew build'
                                 sh './gradlew clean build --parallel'
+                                junit '**/TEST*.xml'
                             }
                         }
                     }
                 }
             }
         }
+
+  - 마스터 노드가 4개 이상의 동시 빌드를 실행할 수 있도록 설정
+    - Dashboard > Nodes and Clouds > Built-In Node > Configure
+        http://localhost:8080/computer/(built-in)/configure
+    - 빌트인 노드의 설정을 확인하고 executor 를 4 이상으로 설정후 저장
+
+  - 빌드를 여러번 4번 연속 실행하고 실행 결과 확인
 
   - 빌드의 > Test Report 로 이동하여 테스트 정보 확인

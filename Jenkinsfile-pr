@@ -1,0 +1,88 @@
+pipeline {
+    // 어떠한 에이전트에서도 실행 가능함을 표현
+    agent any
+
+
+
+    options {
+        // 빌드를 5개만 유지
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+        // github 프로젝트 설정
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+    }
+
+
+    // stages > stage > steps 순으로 구성
+    stages {
+        stage('Prepare') {
+            steps {
+                // 어떤 환경변수가 주입되는지 확인
+                sh "printenv"
+                script {
+                 
+                    properties([
+                            // https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/
+                            pipelineTriggers([
+                                    // PR builder trigger
+                                    [
+                                            $class        : 'GhprbTrigger',
+                                            adminlist     : 'junoyoon',
+                                            cron: "*/15 * * * *",
+                                            permitAll     : false,
+                                            useGitHubHooks: true,
+                                            triggerPhrase : '.*(test this|build this|deploy this).*',
+                                            gitHubAuthId  : '0e0e7b1f-09c0-4380-bf6c-c07409bd9f99', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
+                                            extensions    : [
+                                                    [
+                                                            $class             : 'GhprbSimpleStatus',
+                                                            commitStatusContext: 'jenkins',
+                                                            showMatrixStatus   : false
+                                                    ]
+                                            ]
+                                    ]
+                            ])
+                    ])   
+                }
+            }
+        }
+       
+
+        stage('Build') {
+            steps {
+              // dir 은 디렉토리 이동
+              dir("projects/spring-app") {
+                  // withGradle 을 하면, Gradle 로그를 해석
+                  withGradle {
+                       sh "./gradlew build"
+                  }
+              }
+            }
+        }
+
+    }
+
+    // post 는 stage 마다 실행시킬 수도 있고, 전체 stages가 완료된 다음에 실행 시킬 수도 있음
+    post {
+        always {
+            scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
+            junit '**/test-results/**/*.xml'
+            jacoco sourcePattern: '**/src/main/kotlin'
+        }
+
+        success {
+            script {
+                script {
+                        if ((env.ghprbCommentBody ?: "").contains("deploy this")) {
+                            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+                            build(
+                                   job: 'pipeline-deploy',
+                                   parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                                   wait: false,
+                                   propagate: false
+                            )
+                        }
+                    }
+            }
+        }
+    }
+}

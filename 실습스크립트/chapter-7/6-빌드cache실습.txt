@@ -43,7 +43,7 @@ pipeline {
                             branches: [[name: 'origin/main']],
                             userRemoteConfigs: [[
                                     credentialsId: 'github-ssh',
-                                    url          : 'git@github.com:[각자의 github 계정/fastcampus-jenkins.git']
+                                    url          : 'git@github.com:[각자의 github 계정]/fastcampus-jenkins.git']
                             ],
                             extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
                     )
@@ -54,15 +54,16 @@ pipeline {
                         /*
                         writeFile(
                            file:"settings.gradle.kts",
-                           text: """
-                                buildCache {
-                                    remote<HttpBuildCache> {
-                                         url = uri("http://build-cache-node:5071/cache/")
-                                         isPush = true
-                                         setAllowInsecureProtocol(true)
-                                    }
-                                }
-                                """
+                           text:
+"""
+buildCache {
+    remote<HttpBuildCache> {
+        url = uri("http://build-cache-node:5071/cache/")
+        isPush = true
+        setAllowInsecureProtocol(true)
+    }
+}
+"""
                         ) */
 
                         withEnv(['SLOW_TEST_ENABLED=true']) {
@@ -106,7 +107,7 @@ pipeline {
                   volumes:
                    - name: gradle-dependency-volume
                      hostPath:
-                       path: /root/${JOB_BASE_NAME}/gradle-dependency   # 해당 디렉토리가 존재해야 합니다.
+                       path: /root/${PROJECT_NAME}/gradle-dependency   # 해당 디렉토리가 존재해야 합니다.
                        type: DirectoryOrCreate
 
    - 빌드후 속도 개선 확인
@@ -122,11 +123,11 @@ pipeline {
 * gradle remote build cache 사용
   - 빌드 캐시 서버 실행
 
-    docker run --detach --rm \
+    docker run -d --rm \
         --hostname build-cache-node \
         --name build-cache-node \
         --network practice \
-        --volume ~/practice/build-cache-node:/data \
+        --volume ${HOME}/practice/build-cache-node:/data \
         --publish 5071:5071 \
         gradle/build-cache-node:15.0 \
         start
@@ -137,21 +138,21 @@ pipeline {
       - http://localhost:5071
       - 위 username / password 로 로그인
       - 패스워드 변경
-        - UI access control
-        - username / password 입력후 저장
+        - UI access control > Open 선택후 저장
+        - Build cache > Cache Access Control : anonymous 유저에게 Read & Write 부여후 저장
 
   - pipeline 에 리모트 빌드 설정 추가를 위해 아래 영역 커멘트 제거
 
         writeFile(
                file:"settings.gradle.kts",
                text: """
-                  buildCache {
-                      remote<HttpBuildCache> {
-                           url = uri("http://build-cache-node:5071/cache/")
-                           isPush = true
-                           setAllowInsecureProtocol(true)
-                      }
-                  }
+buildCache {
+    remote<HttpBuildCache> {
+        url = uri("http://build-cache-node:5071/cache/")
+        isPush = true
+        setAllowInsecureProtocol(true)
+    }
+}
                   """
         )
 

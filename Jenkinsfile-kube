@@ -1,0 +1,77 @@
+pipeline {
+  agent none
+  stages {
+    stage('Run gradle') {
+        agent {
+            kubernetes {
+              yaml """
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: gradle
+                    image: gradle:7.6.1-jdk17
+                    command:
+                    - sleep
+                    args:
+                    - 99d
+                    volumeMounts:
+                    - name: gradle-cache-volume
+                      mountPath: /home/gradle/.gradle
+                  volumes:
+                  - name: gradle-cache-volume
+                    hostPath:
+                      path: /root/${JOB_BASE_NAME}/gradle-cache   # 해당 디렉토리가 존재해야 합니다.
+                      type: DirectoryOrCreate
+                """
+            }
+        }
+        steps {
+      	  container('gradle') {
+
+      	     // build 라고 가정
+         	 sh 'printenv'
+         	 dir ("projects/spring-app") {
+         	     
+         	    sh "ls -al"
+         	    writeFile(
+         	        file:"settings.gradle.kts",
+         	        text: """
+buildCache {
+    remote<HttpBuildCache> {
+        url = uri("http://build-cache-node:5071/cache/")
+        isPush = true
+        setAllowInsecureProtocol(true)
+    }
+}
+"""
+         	    )
+         	    timestamps {
+         	        sh 'gradle --build-cache build'
+         	        sh 'gradle --build-cache clean build'
+         	        
+         	    }
+         	 }
+       	  }
+       }
+    }
+    
+    
+      stage('Run kaniko') {
+        agent {
+            label "kaniko"
+        }
+
+        steps {
+            container(name: 'kaniko', shell: '/busybox/sh') {
+              sh "ls -al"
+              unstash 'BUILD_OUTPUT'
+              sh '''#!/busybox/sh
+                    echo "FROM openjdk:20-ea-17-bullseye\nCOPY app.jar app.jar" > Dockerfile
+                    /kaniko/executor --log-format text --no-push --context `pwd` --destination hello-world:latest
+              '''
+            }
+       }
+    }
+  }
+}

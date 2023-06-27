@@ -17,6 +17,33 @@
     cd ~/practice
     chmod 400 fastcampus-jenkins.pem
     ssh-keygen -y -f fastcampus-jenkins.pem > fastcampus-jenkins.pub
+  - eks 를 위한 iam role 설정
+    - 다음 내용을 cluster-trust-policy.json 로 저장
+
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {
+            "Service": "eks.amazonaws.com"
+          },
+          "Action": "sts:AssumeRole"
+        }
+      ]
+    }
+
+    - role 생성
+
+    aws iam create-role \
+      --role-name eksClusterRole \
+      --assume-role-policy-document file://"cluster-trust-policy.json"
+
+    - role 에 IAM policy 지정
+
+    aws iam attach-role-policy \
+      --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy \
+      --role-name eksClusterRole
 
 * eks 생성
 
@@ -33,7 +60,6 @@ eksctl create cluster \
     --managed \
     --node-type t2.medium
 
-
 eksctl create cluster \
     --name fastcampus-jenkins-eks \
     --version 1.27 \
@@ -42,3 +68,14 @@ eksctl create cluster \
 
   - 생성 로그 확인
     - https://ap-northeast-2.console.aws.amazon.com/eks/home?region=ap-northeast-2#/clusters/fastcampus-jenkins-eks
+
+
+* ec2 에 jenkins 컨트롤러 vm 생성
+  - https://ap-northeast-2.console.aws.amazon.com/ec2/home?region=ap-northeast-2#Instances:v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false
+  - 기존 jenkins-agent 선택후, 오른쪽 키, 이미지 및 템플릿 > 이런 방식으로 더 많이 생성
+    - 이름 : jenkins-controller
+    - 키페어 이름 : fastcampus-jenkins
+    - 퍼블릭 IP 자동 할당 : 활성화
+    - 인스턴스 시작 클릭
+  - 생성중인 인스턴스 선택후, 콘솔 연결
+    -

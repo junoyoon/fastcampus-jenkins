@@ -1,0 +1,22 @@
+pipeline {
+
+    agent any
+    
+    stages {
+        stage("touch") {
+            agent {
+                 label "vm-manual"
+            }
+            steps {
+                sh "pwd; touch a.txt; ls -al"
+            }
+        }
+        
+        stage("archive") {
+            steps {
+                sh "pwd; ls -al"
+                archiveArtifacts artifacts: 'a.txt', followSymlinks: false
+            }
+        }
+    }
+}
