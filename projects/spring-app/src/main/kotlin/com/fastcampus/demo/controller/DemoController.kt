@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.client.HttpClientErrorException.NotFound
 import org.springframework.web.server.ResponseStatusException
 import java.io.File
 
@@ -19,7 +18,6 @@ class DemoController(
 
     @GetMapping("/")
     fun home(): Map<String, String> {
-
         return mapOf(
             "version" to "1.0",
             "gitCommit" to gitCommit,

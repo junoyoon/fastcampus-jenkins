@@ -138,17 +138,16 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6ImFLMkVySXBQZ2ZkTklwdlZFSGg0MHc2UzhWS2FZVlc4bnhGSXBQ
     docker network create server
 
     # server 2대 띄우기
-    docker run -d --rm --hostname server1 --network server --name server1 azul/zulu-openjdk-centos sleep 9999999999999
-    docker run -d --rm --hostname server2 --network server --name server2 azul/zulu-openjdk-centos sleep 9999999999999
+    docker run -d --rm --hostname server1 --network server --name server1 azul/zulu-openjdk-centos:17-latest sleep 9999999999999
+    docker run -d --rm --hostname server2 --network server --name server2 azul/zulu-openjdk-centos:17-latest sleep 9999999999999
 
+    mkdir ~/haproxy; cd ~/haproxy
+    curl -Ol "https://raw.githubusercontent.com/junoyoon/fastcampus-jenkins/main/%EC%8B%A4%EC%8A%B5%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8/chapter-8/conf/haproxy.cfg"
+rl
     docker run -d --name haproxy --restart always \
          --network server -p 8080:8080 \
          -v /home/ec2-user/haproxy:/usr/local/etc/haproxy \
          haproxy
-
-    ps -eaf | grep -v grep | grep sleep |  awk '{print "kill -TERM "$1}' | sh -x
-
-    sudo yum install -y java-17-amazon-corretto-devel.x86_64
 
 ************************************************************************
 * jenkins-tools 서버 설정 (Optional)
