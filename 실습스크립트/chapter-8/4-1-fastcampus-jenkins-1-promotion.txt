@@ -1,0 +1,46 @@
+
+pipeline {
+    // 어떠한 에이전트에서도 실행 가능함을 표현
+    agent any
+
+    options {
+        // 빌드를 5개만 유지
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+
+        // 배포는 한번에 한개만
+        disableConcurrentBuilds()
+        copyArtifactPermission "*"
+    }
+
+    // stages > stage > steps 순으로 구성
+    stages {
+        stage('Copying from fastcampus-jenkins-build/main.') {
+            steps {
+                 copyArtifacts(
+                    filter: '**/*',
+                    fingerprintArtifacts: true,
+                    flatten: true,
+                    projectName: "fastcampus-jenkins-build/main",
+                    selector: lastSuccessful(),
+                    target: 'candicate'
+                )
+                script {
+                    def pipeline = readFile 'candicate/pipeline.properties'
+                    currentBuild.description = pipeline
+                }
+            }
+        }
+
+        stage('Promoting') {
+            steps {
+                echo "여기서 프로모션 진행"
+            }
+        }
+
+        stage('Archive Promoted') {
+            steps {
+                archiveArtifacts artifacts: 'candicate/*', followSymlinks: false
+            }
+        }
+    }
+}

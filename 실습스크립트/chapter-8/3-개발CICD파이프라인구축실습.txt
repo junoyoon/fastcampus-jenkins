@@ -1,0 +1,111 @@
+* Jenkins github 설정
+    - github 설정
+      - Jenkins 관리 > System > Github > Add Github Server
+        - Name : github
+        - Credential : github personal token 입력 (Secret Text)
+          - 다음에도 쓰이니 꼭 적어두세요.
+        - Test Connection
+        - Manage Hook 클릭
+
+* Jenkins kubernetes 설정
+  - Jenkins 관리 > Nodes and Clouds > Cloud > Kubernetes
+  - http://[jenkins-public-ip]:8080/manage/configureClouds/
+  - Pod Template > Add Pod Template
+    - Name : gradle:7.6.1-jdk17
+    - Label : gradle:7.6.1-jdk17
+    - Add Container
+      - Name : gradle
+      - Docker image : gradle:7.6.1-jdk17
+    - Add Volumes
+      - Host path : /volumes
+      - Mount path : /volumes
+  - Pod Template > Add Pod Template
+    - Name : kaniko
+    - Label : kaniko
+    - Add Container
+      - Name : kaniko
+      - Docker image : gcr.io/kaniko-project/executor:debug
+    - 저장
+
+- Kubernetes 설정 테스트
+  - Item 생성
+    - Item Name : k8s-multiple-inherit
+    - Multibranch pipeline
+
+
+// Uses Declarative syntax to run commands inside a container.
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom "gradle:7.6.1-jdk17 kaniko"
+        }
+    }
+    stages {
+        stage('gradle') {
+            steps {
+                container("gradle") {
+                     sh 'hostname'
+                }
+
+                container("kaniko") {
+                     sh 'hostname'
+                }
+            }
+        }
+    }
+}
+
+* 실습용 EC2 ssh 키 준비
+  - Jenkins 관리 > Credentials > System > Global Credential > Add Credentials
+    - SSH Username with private key
+      - ID: ec2-user-ssh
+      - Description : ec2-user-ssh
+      - Username : ec2-user
+      - Private Key :
+        - Enter directly
+        - 앞서 다운 받았던 fastcampus-jenkins.pem 텍스트 입력
+      - Create
+
+* multibranch pipeline 구성
+  - Item 생성
+    - Item Name : fastcampus-jenkins-build
+    - Multibranch pipeline
+  - Branch Sources > Add Source > Github
+    - Credential
+      - Add > Jenkins >
+        - Username : github 계정
+        - Password : github secret token 입력
+          - 만약 아직 personal access token 발급 받지 않았다면, 다음으로 이동하여 발급
+          - https://github.com/settings/tokens
+             - 필요 권한 - repo, admin:repo_hook
+        - ID : github-id-and-personal-access-token
+        - Description : github-id-and-personal-access-token
+        - Add 클릭
+      - Add > Jenkins > github-id-and-personal-access-token 선택
+      - Repository HTTPS URL : https://github.com/[각자의계정]/fastcampus-jenkins
+      - Validate 클릭하여 접근 권한 확인
+      - Behaviours
+        - Discover pull requests from origin : Merging ... 선택
+        - Discover pull requests from forks : Merging ... 선택
+        - Add > Ignore pull requests marked as drafts
+        - Add > Custom Github Notification Context
+          - Label : jenkins
+    - Build Configuration
+      - Common pipeline definition for markerfile
+        - Markerfile : README.md
+        - Script:
+          - 3-1-fastcampus-jenkins-build.txt 내용 입력
+
+    - Jenkinsfile 컨텐트 확인
+      - Dockerize step
+      - 어떤 파일을 archive 하는지
+      - withCredentials 를 사용하여 ssh 전송 부분
+      - currentBuild.description 관련 코드
+
+* 빌드후 배포 확인
+  - PR 생성후, 빌드 확인. deploy this 커멘트 입력
+  - main 빌드
+
+* Dockerize 실습
+  - 3-1-fastcampus-jenkins-build.txt 의 stage("Dockerize") 커멘트 제거
+  - 빌드후 이후 처리 방법 확인

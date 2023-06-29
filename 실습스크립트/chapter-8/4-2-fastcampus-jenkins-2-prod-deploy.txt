@@ -1,0 +1,163 @@
+pipeline {
+    agent { label "prod-agent" }
+
+    options {
+        // 빌드를 5개만 유지
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
+
+        // 배포는 한번에 한개만
+        disableConcurrentBuilds()
+
+        // 실제 소스 코드는 불필요 하므로 checkout skip
+        skipDefaultCheckout()
+    }
+
+    environment {
+        TARGET_SERVER_STAGE = "여기에 STAGE 서버 입력"
+        TARGET_SERVER_PROD = "여기에 PROD 서버 입력"
+    }
+
+    parameters {
+        booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
+        buildSelector defaultSelector: lastSuccessful(), description: '배포할 promotion', name: 'BUILD_SELECTOR'
+    }
+
+    stages {
+        stage("Checking Deployment") {
+              when {
+                  environment name: 'ARE_YOU_SURE', value: 'false'
+              }
+              steps {
+                  script {
+                    currentBuild.description = "실수로 실행됨"
+                  }
+                  error('Executed mistakenly.')
+              }
+        }
+
+        stage('Copying from promotions') {
+            steps {
+                 copyArtifacts(
+                    filter: '**/*',
+                    fingerprintArtifacts: true,
+                    flatten: true,
+                    projectName: "fastcampus-jenkins-1-promotion",
+                    selector: buildParameter('BUILD_SELECTOR'),
+                    target: 'deploy'
+                )
+                script {
+                    def pipeline = readFile 'deploy/pipeline.properties'
+                    currentBuild.description = pipeline
+                }
+            }
+        }
+
+        stage('Deploy to staging') {
+            steps {
+                // remote.allowAnyHosts = true
+               withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user-ssh', keyFileVariable: 'IDENTITY', passphraseVariable: '', usernameVariable: 'userName')]) {
+                   // 퍄일 카피
+                   sh '''
+                       scp -o StrictHostKeychecking=no -i $IDENTITY \
+                              deploy/* \
+                              ec2-user@$TARGET_SERVER_STAGE:~
+                       '''
+                   echo "copied"
+                   // 재시작 스크립트 구동
+                   sh '''
+                       ssh -o StrictHostKeychecking=no -tt -i $IDENTITY \
+                           ec2-user@$TARGET_SERVER_STAGE \
+                           "sh -c './deploy.sh --application.branch=$BRANCH --application.git-commit=$GIT_COMMIT' "
+                      '''
+                   echo "deployed"
+               }
+            }
+
+            post {
+                aborted {
+                    echo "prod 배포가 취소 되었습니다."
+                    script {
+                        appendDescription("staging 배포 취소")
+                    }
+                }
+
+                failure {
+                    echo "staging 배포가 실패하였습니다."
+                    script {
+                        appendDescription("staging 배포 실패")
+                    }
+                }
+                success {
+                    echo "staging 배포 완료 되었습니다."
+                    script {
+                        appendDescription("staging 배포 완료")
+                   }
+                }
+            }
+        }
+
+        stage('Archive staged artifact') {
+            steps {
+                archiveArtifacts artifacts: 'deploy/*', followSymlinks: false
+            }
+        }
+
+        stage('Deploy to production') {
+            input {
+                message '프로덕션 배포 진행하시겠습니까?'
+                id 'DEPLOY_TO_PRODUCTION'
+                ok '예. 배포 진행하겠습니다.'
+                submitter 'admin'
+                submitterParameter 'submitter'
+            }
+
+            steps {
+                // remote.allowAnyHosts = true
+               withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user-ssh', keyFileVariable: 'IDENTITY', passphraseVariable: '', usernameVariable: 'userName')]) {
+                   // 퍄일 카피
+                   sh '''
+                       scp -o StrictHostKeychecking=no -i $IDENTITY \
+                              deploy/* \
+                              ec2-user@$TARGET_SERVER_PROD:~
+                       '''
+                   echo "copied"
+                   // 재시작 스크립트 구동
+                   sh '''
+                       ssh -o StrictHostKeychecking=no -tt -i $IDENTITY \
+                           ec2-user@$TARGET_SERVER_PROD \
+                           "sh -c './deploy.sh --application.branch=$BRANCH --application.git-commit=$GIT_COMMIT' "
+                      '''
+                   echo "deployed"
+               }
+            }
+
+            post {
+                aborted {
+                    echo "prod 배포가 취소 되었습니다."
+                    script {
+                        appendDescription("prod 배포 취소")
+                   }
+                }
+
+                failure {
+                    echo "prod 배포가 실패하였습니다."
+                    script {
+                        appendDescription("prod 배포 실패")
+                   }
+                }
+                success {
+                    echo "prod 배포 완료 되었습니다."
+                    script {
+                        appendDescription("prod 배포 완료")
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+def appendDescription(description) {
+    def datetime = new Date().format("[MM/dd HH:mm:ss]")
+    currentBuild.description += "<br/><b>${datetime}</b> ${description}"
+}
