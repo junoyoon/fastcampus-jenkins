@@ -1,16 +1,18 @@
-* 먼저 혹시 앞서 진행안했다면, Admin 계정 pw 변경
+* 먼저 혹시 앞서 admin 암호 변경 안했다면, Admin 계정 암호 변경 변경
   - docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
-* Jenkins github 설정
-  - github 설정
-    - Jenkins 관리 > System > Github > Add Github Server
-      - Name : github
+* Jenkins GitHub 설정
+  - GitHub 설정
+    - Jenkins 관리 > System > GitHub > Add GitHub Server
+      - Name : github-personal-access-token
       - Credential : github personal token 입력 (Secret Text)
         - 다음에도 쓰이니 꼭 적어두세요.
       - Test Connection
       - Manage Hook 클릭
+      - 저장
 
 * Jenkins kubernetes 설정
+  - podTemplate 사용
   - Jenkins 관리 > Nodes and Clouds > Cloud > Kubernetes
   - http://[jenkins-public-ip]:8080/manage/configureClouds/
   - Pod Template > Add Pod Template
@@ -91,8 +93,14 @@ pipeline {
         - Discover pull requests from origin : Merging ... 선택
         - Discover pull requests from forks : Merging ... 선택
         - Add > Ignore pull requests marked as drafts
-        - Add > Custom Github Notification Context
+        - Add > Custom GitHub Notification Context
           - Label : jenkins
+      - Property Strategy
+        - Branch names to build automatically : .*
+        - For matching branches suppress builds triggered by indexing (continue to honor webhooks)
+          선택
+        - 빌드스톰을 막는 과정 - https://www.youtube.com/watch?v=2XK8ikOCpOw
+
     - Build Configuration
       - 다음이 나오지 않는다면, Multibranch Pipeline Inline Definition 플러그인 설치
       - Common pipeline definition for markerfile

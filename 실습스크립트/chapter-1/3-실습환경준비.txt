@@ -1,57 +1,73 @@
+* 실습을 위한 패스 생성 및 이동
+    mkdir ~/practice; cd ~/practice
 
-# 키 생성
-mkdir projects
-cd projects
-docker run --rm -it --entrypoint /keygen.sh linuxserver/openssh-server
-vi ~/practice/key/private.key
-vi ~/practice/key/public.key
-chmod 400 ~/practice/key/private.key
+* SSH 키 생성
 
-docker network create practice
+    docker run --rm -it --entrypoint /keygen.sh linuxserver/openssh-server
+    vi ~/practice/key/private.key
+    vi ~/practice/key/public.key
+    chmod 400 ~/practice/key/private.key
 
-docker run -d --name=operation \
-     -e PUBLIC_KEY_FILE=/key/public.key \
-     -p 2222:2222 -p 80:80 \
+* docker network 생성
+
+    docker network create practice
+
+**********************************************************************************************
+* server_1 / server_2 실행
+
+    docker run -d --rm --name=server_1 --hostname=server_1 \
+         -v ~/practice/key:/key \
+         -e PUBLIC_KEY_FILE=/key/public.key -e SUDO_ACCESS=true -e USER_NAME=user  \
+         --network=practice \
+         lscr.io/linuxserver/openssh-server:latest
+
+    docker run -d --rm --name=server_2 --hostname=server_2 \
+         -v ~/practice/key:/key \
+         -e PUBLIC_KEY_FILE=/key/public.key -e SUDO_ACCESS=true -e USER_NAME=user  \
+         --network=practice \
+         lscr.io/linuxserver/openssh-server:latest
+
+* server_1 / server_2 에 openjdk 설치
+
+    docker exec server_1 apk add --update openjdk17
+    docker exec server_2 apk add --update openjdk17
+
+**********************************************************************************************
+* haproxy 설치
+
+  mkdir ~/practice/haproxy
+  cat > ~/practice/haproxy.cfg << EOF
+defaults
+  mode http
+  timeout client 10s
+  timeout connect 5s
+  timeout server 10s
+  timeout http-request 10s
+
+frontend frontend
+  bind 0.0.0.0:8080
+  default_backend servers
+
+backend servers
+  option httpchk
+  http-check send meth GET  uri /health
+  server server1 server_1:8080 check
+  server server2 server_2:8080 check
+EOF
+
+# haproxy docker 실행
+docker run -d --name haproxy --restart always \
+         --network practice \
+         -p 8080:8080 \
+         -v ~/practice/haproxy:/usr/local/etc/haproxy \
+         haproxy
+
+**********************************************************************************************
+* cicd 설치
+
+docker run -d --rm --name=cicd \
      -v ~/practice/key/:/key \
-     -e SUDO_ACCESS=true \
-     -e USER_NAME=user  \
-     --hostname=operation \
+     --hostname=cicd \
      --network=practice \
-     lscr.io/linuxserver/openssh-server:latest
+     gradle:7.6.1-jdk17 sleep 9999999999
 
-ssh -i ~/practice/key/private.key -p 2222 user@localhost
-exit
-touch test.txt
-scp -i ~/practice/key/private.key -P 2222 test.txt user@localhost:/config/test.txt
-ssh -i ~/practice/key/private.key -P 2222 ls -al /config/
-
-# 필요한 어플리케이션 설치
-docker exec operation apk add --update haproxy cronie docker git
-docker exec operation bash -c 'crond; haproxy -D -f /etc/haproxy/haproxy.cfg'
-docker run -d --name=server_1 \
-     -e PUBLIC_KEY_FILE=/key/public.key \
-     -p 12222:2222 -p 18080:8080 \
-     -v /var/run/docker.sock:/var/run/docker.sock  \
-     -v ~/practice/key:/key \
-     -e SUDO_ACCESS=true \
-     -e USER_NAME=user  \
-     --hostname=server_1 \
-     --network=practice \
-     lscr.io/linuxserver/openssh-server:latest
-
-ssh -i ~/practice/key/private.key -p 12222 user@localhost
-
-docker exec server_1 apk add --update openjdk11 docker nginx python
-
-docker run -d --name=server_2 \
-     -e PUBLIC_KEY_FILE=/key/public.key \
-     -p 22222:2222 -p 28080:8080 \
-     -v /var/run/docker.sock:/var/run/docker.sock  \
-     -v ~/practice/key:/key \
-     -e SUDO_ACCESS=true \
-     -e USER_NAME=user  \
-     --hostname=server_2 \
-     --network=practice \
-     lscr.io/linuxserver/openssh-server:latest
-
-docker exec server_2 apk add --update openjdk11 docker nginx python

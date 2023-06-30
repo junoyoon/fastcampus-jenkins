@@ -9,7 +9,7 @@ then
 fi
 
 echo "changed"
-git pull -f
+git checkout -f origin/main
 
 echo "building"
 ./build.sh
@@ -22,7 +22,7 @@ fi
 echo "successfully built"
 
 echo "deploying"
-./deploy.sh
+./cd.sh
 ret=$?
 if [ $ret -eq 0 ]
 then

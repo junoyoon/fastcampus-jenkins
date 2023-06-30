@@ -3,7 +3,7 @@ https://github.com/junoyoon/fastcampus-jenkins
 
 # operation container 로 접근후 해당 repo 를 clone
 
-docker exec -it operation bash
+docker exec -it cicd bash
 git clone https://github.com/본인계정명/fastcampus-jenkins.git
 cd fastcampus-jenkins
 ls -al

@@ -6,16 +6,22 @@
 * 빌드후 조치 > Send build artifact over SSH 추가
   - Publish Over SSH 플러그인 추가
   - Jenkins 관리 > System > Publish Over SSH
-    - Path Tp Key /key/private.key
+    - Path To Key : /key/private.key
     - Add Server
-    - Name : server_1
-    - Host : server_1
-    - Username : user
+      - Name : server_1
+      - Host : server_1
+      - Username : user
+      - Remote Directory : /config
+      - 고급
+        - Port : 2222
+    # private.key 파일을 읽을 수 없는 문제가 있다면, 다음 명령어를 수행하여 문제 해결
+      docker exec -it jenkins chmod 400 /key/private.key
+
   - Job > 빌드후 조치 > Send build artifact over SSH 추가
     - Name: server_1
     - Source files: **/build/libs/*-SNAPSHOT.jar
     - Remove prefix : projects/spring-app/build/libs
-    -
+
   - 빌드 실행 및 결과 확인
     - docker exec -it server_1 bash
     - ls -al
