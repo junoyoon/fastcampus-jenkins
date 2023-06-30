@@ -1,63 +1,25 @@
-https://github.com/junoyoon/fastcampus-jenkins
-를 본인의 계정으로 Fork
+* 기존 방식에서 정지가 있음을 확인
 
-# operation container 로 접근후 해당 repo 를 clone
+* cicd 컨테이너로 이동
 
-docker exec -it operation bash
-git clone https://github.com/본인계정명/fastcampus-jenkins.git
-cd fastcampus-jenkins
-ls -al
+    docker exec -it cicd bash
 
-# cron 으로 실행할 스크립트 준비
-# 다음 파일을 run.sh 로 생성
-vi /fastcampus-jenkins/run.sh
-----
+    cd ~/fastcampus-jenkins
 
-#!/bin/bash
-git fetch --force origin
-git diff ..origin/main --exit-code
-ret=$?
-if [ $ret -eq 0 ]
-then
-    echo "no changes"
-    exit 0
-fi
+    # deploy 파일 변경
+    cp 3-deploy-with-rolling-update.sh 3-deploy.sh
 
-echo "changed"
-git pull -f
+* 롤링 코드 업데이트 확인
+  - health 체크 관련 코드 확인
+    - https://github.com/junoyoon/fastcampus-jenkins/blob/main/projects/spring-app/src/main/kotlin/com/fastcampus/demo/controller/DemoController.kt
+  - deploy.sh 확인
 
-echo "building"
-./build.sh
-ret=$?
-if [ $ret -ne 0 ]
-then
-    echo "build failed"
-    exit -1
-fi
-echo "successfully built"
+* github 에 변경을 일으키고 잘 감지하여 무정지 배포하는지 확인
+  - 0-cron.sh 실행
+  - github 에 변경 생성하여 main 에 바로 커밋
+  - 빌드 확인
 
-echo "deploying"
-./deploy.sh
-ret=$?
-if [ $ret -eq 0 ]
-then
-    echo "deploy failed"
-    exit -1
-fi
-
-echo "successfully deployed"
----
-
-# 이 파일을 실행 가능 하도록 변경
-chmod 755 run.sh
-
-# 실행해 봄
-/fastcampus-jenkins/run.sh
-
-> no change
-
-# build.sh 생성
-----
-
-./gradle build
-
+* 불필요한 docker 제거 - server_2 제외하고 모두 삭제
+  docker rm -f haproxy
+  docker rm -f server_2
+  docker rm -f cicd

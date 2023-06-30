@@ -3,6 +3,7 @@
 
 * cicd container 로 접근후 해당 repo 를 clone
 
+    cd ~
     docker exec -it cicd bash
     git clone https://github.com/본인계정명/fastcampus-jenkins.git
     cd fastcampus-jenkins
@@ -12,19 +13,15 @@
 
 
 * 실습 스크립트 복사
-
    cp 실습스크립트/chapter-1/script/* ./
-   chmod 755 cicd.sh
-# 이 파일을 실행 가능 하도록 변경
 
+  - 코드 확인
 
-# 실행해 봄
-/fastcampus-jenkins/run.sh
+* cicd 프로세스 실행
 
-> no change
+  ./1-cicd.sh
 
-# build.sh 생성
-----
+* github 에 변경이후 잘 변경을 검출하는지 확인
 
-./gradle build
-
+* 주기적 실행해 보기
+  - 0-cron.sh
