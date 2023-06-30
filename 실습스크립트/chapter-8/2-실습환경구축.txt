@@ -61,7 +61,7 @@
 
   - jenkins container 시작
     - 접근주소 : **여기에 기록해 두세요**
-      http://ec2-3-34-192-241.ap-northeast-2.compute.amazonaws.com:8080/
+
     - 초기 패스워드 입력
       docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
     - Suggested Plugin 설치
