@@ -1,3 +1,10 @@
+//
+// 다음을 교체 바람
+// - [각자의github계정]
+// - "여기에 PR서버 DNS 입력"
+// - "여기에 DEV서버 DNS 입력"
+// - "여기에 QA서버 DNS 입력"
+//
 pipeline {
     // kubernetes gradle template 과 kaniko template 을 합성
     agent {
@@ -11,7 +18,7 @@ pipeline {
         // SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
         TARGET_SERVER_PR = "여기에 PR서버 DNS 입력"
         TARGET_SERVER_DEV = "여기에 DEV서버 DNS 입력"
-        TARGET_SERVER_QA = "여기에 DEV서버 DNS 입력"
+        TARGET_SERVER_QA = "여기에 QA서버 DNS 입력"
         // gradle cache 저장 위치를 공유 볼륨 하위로 이동
         GRADLE_USER_HOME = "/volumes/gradle-cache-fastcampus-jenkins"
     }
@@ -23,7 +30,7 @@ pipeline {
 
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
-        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/[각자의github계정]/fastcampus-jenkins')
         copyArtifactPermission('*')
     }
 
@@ -87,7 +94,7 @@ pipeline {
             steps {
                 container(name: 'kaniko', shell: '/busybox/sh') {
                   sh '''#!/busybox/sh
-                        /kaniko/executor --log-format text --no-push --context `pwd`/projects/spring-app --destination sprint-app:${BRANCH_NAME}-${BUILD_NUMBER}
+                        /kaniko/executor --log-format text --no-push --context `pwd`/projects/spring-app --destination spring-app:${BRANCH_NAME}-${BUILD_NUMBER}
                   '''
                 }
             }
@@ -103,7 +110,7 @@ pipeline {
                         mv projects/spring-app/build/libs/*-SNAPSHOT.jar deploy/
                         mv projects/spring-app-script/* deploy/
                         echo "$JOB_NAME#$BUILD_NUMBER" > deploy/pipeline.properties
-                        echo "sprint-app:${BRANCH_NAME}-${BUILD_NUMBER}" > deploy/docker-version.properties
+                        echo "spring-app:${BRANCH_NAME}-${BUILD_NUMBER}" > deploy/docker-version.properties
                     """
                 }
             }
@@ -245,7 +252,7 @@ def isMain() {
 }
 
 def isDevelop() {
-    return env.BRANCH_NAME == "develop"
+        return env.BRANCH_NAME == "develop"
 }
 
 def isPr() {

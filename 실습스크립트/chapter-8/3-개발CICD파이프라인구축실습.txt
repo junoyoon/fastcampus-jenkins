@@ -1,11 +1,14 @@
+* 먼저 혹시 앞서 진행안했다면, Admin 계정 pw 변경
+  - docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+
 * Jenkins github 설정
-    - github 설정
-      - Jenkins 관리 > System > Github > Add Github Server
-        - Name : github
-        - Credential : github personal token 입력 (Secret Text)
-          - 다음에도 쓰이니 꼭 적어두세요.
-        - Test Connection
-        - Manage Hook 클릭
+  - github 설정
+    - Jenkins 관리 > System > Github > Add Github Server
+      - Name : github
+      - Credential : github personal token 입력 (Secret Text)
+        - 다음에도 쓰이니 꼭 적어두세요.
+      - Test Connection
+      - Manage Hook 클릭
 
 * Jenkins kubernetes 설정
   - Jenkins 관리 > Nodes and Clouds > Cloud > Kubernetes
@@ -91,6 +94,7 @@ pipeline {
         - Add > Custom Github Notification Context
           - Label : jenkins
     - Build Configuration
+      - 다음이 나오지 않는다면, Multibranch Pipeline Inline Definition 플러그인 설치
       - Common pipeline definition for markerfile
         - Markerfile : README.md
         - Script:

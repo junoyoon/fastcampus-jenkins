@@ -152,6 +152,7 @@ Token : **여기에 기록해 두세요**
       - Jacoco
       - Github Custom Notification Context SCM Behaviour
       - Warnings Next Generation
+      - Multibranch Pipeline Inline Definition
       - SonarQube Scanner (Optional)
       - Slack (Optional)
 
