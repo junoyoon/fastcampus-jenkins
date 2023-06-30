@@ -13,6 +13,7 @@
         - 저장
         - Run from agent command line: (Unix) 하단 내용을 복제하여
           jenkins-agent 에서 실행
+          - public DNS 는 private DNS 로 교체
 
         sudo yum install -y java-17-amazon-corretto.x86_64
 

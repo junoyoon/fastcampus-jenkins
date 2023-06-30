@@ -4,8 +4,10 @@
 * SSH 키 생성
 
     docker run --rm -it --entrypoint /keygen.sh linuxserver/openssh-server
-    vi ~/practice/key/private.key
-    vi ~/practice/key/public.key
+
+    ~/practice/key/private.key 에 private key 를
+    ~/practice/key/public.key 에 public key 저장
+
     chmod 400 ~/practice/key/private.key
 
 * docker network 생성
@@ -29,14 +31,14 @@
 
 * server_1 / server_2 에 openjdk 설치
 
-    docker exec server_1 apk add --update openjdk17
-    docker exec server_2 apk add --update openjdk17
+    docker exec server_1 apk add --update openjdk17 python3
+    docker exec server_2 apk add --update openjdk17 python3
 
 **********************************************************************************************
 * haproxy 설치
 
   mkdir ~/practice/haproxy
-  cat > ~/practice/haproxy.cfg << EOF
+  cat > ~/practice/haproxy/haproxy.cfg << EOF
 defaults
   mode http
   timeout client 10s
@@ -58,9 +60,14 @@ EOF
 # haproxy docker 실행
 docker run -d --name haproxy --restart always \
          --network practice \
-         -p 8080:8080 \
+         -p 8081:8080 \
          -v ~/practice/haproxy:/usr/local/etc/haproxy \
          haproxy
+
+- 확인 방법
+  docker exec -it server_1 bash
+  touch health
+  python3 -m http.server 8080
 
 **********************************************************************************************
 * cicd 설치
@@ -70,4 +77,7 @@ docker run -d --rm --name=cicd \
      --hostname=cicd \
      --network=practice \
      gradle:7.6.1-jdk17 sleep 9999999999
+
+docker exec cicd apt-get update
+docker exec cicd apt-get install -y vim
 

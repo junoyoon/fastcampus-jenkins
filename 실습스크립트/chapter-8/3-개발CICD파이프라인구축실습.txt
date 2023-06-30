@@ -4,9 +4,11 @@
 * Jenkins GitHub 설정
   - GitHub 설정
     - Jenkins 관리 > System > GitHub > Add GitHub Server
-      - Name : github-personal-access-token
-      - Credential : github personal token 입력 (Secret Text)
+      - Name : github
+      - Credential : Secret Text
         - 다음에도 쓰이니 꼭 적어두세요.
+        - ID / Description : github-personal-access-token
+        - Secret : 발급한 GitHub personal token
       - Test Connection
       - Manage Hook 클릭
       - 저장

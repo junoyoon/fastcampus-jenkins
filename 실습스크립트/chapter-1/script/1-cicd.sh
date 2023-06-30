@@ -1,33 +1,48 @@
 #!/bin/bash
-git fetch --force origin
-git diff ..origin/main --exit-code
+rm -f ci-flow.log
+git fetch --force origin >> ci-flow.log
+git diff ..origin/main --exit-code > diff.txt
 ret=$?
 if [ $ret -eq 0 ]
 then
+    echo "-------------------------------------------------"
     echo "no changes"
     exit 0
 fi
 
+echo ""
+echo "-------------------------------------------------"
 echo "changed"
-git checkout -f origin/main
+git checkout -f origin/main >> ci-flow.log
 
+echo ""
+echo "-------------------------------------------------"
 echo "building"
-./build.sh
+./2-build.sh
 ret=$?
 if [ $ret -ne 0 ]
 then
+    echo ""
+    echo "-------------------------------------------------"
     echo "build failed"
     exit -1
 fi
+echo ""
+echo "-------------------------------------------------"
 echo "successfully built"
 
+echo ""
+echo "-------------------------------------------------"
 echo "deploying"
-./cd.sh
+./3-deploy.sh
 ret=$?
-if [ $ret -eq 0 ]
+if [ $ret -ne 0 ]
 then
+    echo ""
+    echo "-------------------------------------------------"
     echo "deploy failed"
     exit -1
 fi
-
+echo ""
+echo "-------------------------------------------------"
 echo "successfully deployed"
