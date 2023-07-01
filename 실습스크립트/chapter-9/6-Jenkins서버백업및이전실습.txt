@@ -1,0 +1,88 @@
+* 샘플 job 준비 (2개)
+  - Item name : backup-delete
+  - type : FreeStyle
+  - 설명에 hello world 기재 후 저장
+
+  - Item name : backup-change
+  - type : FreeStyle
+  - 설명에 hello world 기재 후 저장
+  - 두번 빌드 실행
+
+* ThinBackup 플러그인 설치 및 설정
+  - ThinBackup 플러그인 설치
+  - Jenkins 관리 > Tools and Actions > ThinBackup
+    - Settings 로 이동
+      - Backup directory : /var/jenkins_backup
+      - Backup schedule : H 1 * * *
+      - Backup schedule : H/2 * * * *
+      - Max number of backup set : 7
+      - Wait until Jenkins is idle to perform a backup 체크
+      - Backup build results 체크
+        - Backup build archive 체크
+      - Backup plugins archive 체크
+      - Clean up differential backup 체크
+    - Backup now 수행
+
+* 샘플 job 준비 (1개)
+  - Item name : backup-new
+  - type : FreeStyle
+  - 설명에 hello world 기재 후 저장
+
+* 기존 샘플 수정
+  - backup-delete 삭제
+  - backup-change 의 description 변경후 저장
+    - changed
+  - backup-change 빌드 한번 더 수행
+    - 현재 빌드 번호 확인
+
+* 백업 복구
+  - Jenkins 관리 > Tools and Actions > ThinBackup > Restore
+    - 최근 백업 선택후 Restore
+
+* job 복구 확인
+  - backup-delete 는 삭제되어 있음
+  - backup-change 는 변경됨
+    - buildNo 는 유지
+  - backup-new 는 유지됨
+
+* 삭제된 job 을 복구하기
+  - 직접 백업에서 해당 job 을 jenkins home 으로 복사
+
+    docker exec -it jenkins bash
+    cp -rf /var/jenkins_backup/[백업ID]/jobs/backup-delete /var/jenkins_home/jobs/
+
+  - jenkins 재로딩
+    - jenkins 재시작 또는 jenkins 관리 > Tools and Actions > Reload Configuration from Disk
+
+  - backup-delete 가 살아났음을 확인
+
+* Periodic Backup 플러그인 설치 및 설정
+  - 플러그인 설치
+  - Jenkins 관리 > Periodic Backup Manager 이동
+    - Configure 내부에 Backup Location 설정에 S3 지원 확인
+
+* ThinBackup 설정 제거
+  - Jenkins 관리 > Tools and Actions > ThinBackup > Settings
+    - Backup schedule for full backups : 설정 제거
+    - Backup schedule for differential backups : 설정 제거
+    - 저장
+
+
+* jenkins 이전
+  - 백업본 복사
+     docker cp jenkins:/var/jenkins_backup/FULL-2023-07-02_15-42 ~/.jenkins2
+  - 신규 jenkins 실행
+
+    docker run -d -rm --name jenkins2 --hostname=jenkins2 \
+                  --restart=on-failure \
+                  -e TZ=Asia/Seoul \
+                  -p 8081:8080 -p 50001:50000 \
+                  -v ${HOME}/practice/key:/key \
+                  -v ${HOME}/.jenkins2:/var/jenkins_home  \
+                  -v /var/run/docker.sock:/var/run/docker.sock \
+                  --network practice \
+                  --user root \
+                  jenkins/jenkins:my-version
+
+    * http://localhost:8081/ 로 들어가서 이전 확인
+      - 플러그인 설치후, 동작 확인

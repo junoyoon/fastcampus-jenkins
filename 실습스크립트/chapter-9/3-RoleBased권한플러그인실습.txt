@@ -1,6 +1,19 @@
-* Role-based Authorization Strategy 설치
 
-* Authorization 설정
+* Security Realm 을 LDAP으로 설정
+  - Jenkins관리 > Security > Security Realm > LDAP
+    - 서버 : openldap:1389
+    - Advanced Server Configuration
+      - root DN : dc=example,dc=org
+      - Manager DN : cn=admin,dc=example,dc=org
+      - Manager Password : adminpw
+    - Test LDAP Setting 클릭
+      - User: user1
+      - Password : user1pw
+      - Test!!
+
+* Role-based Authorization Strategy 플러그인 설치
+
+* Authorization 을 Role Based Strategy 으로 설정
   - Jenkins 관리 > Security > Authorization > Role Based Strategy 선택
     - 저장
   - Jenkins 관리 > Manage and Assign Roles 이동

@@ -1,0 +1,51 @@
+* 로그 확인
+  docker logs --since 1h -f jenkins
+  - war 로 띄웠을때는 stdout 에 출력
+  - 그외 패키지로 띄웠을떄는 https://www.jenkins.io/doc/book/system-administration/viewing-logs/ 참고
+
+* 웹을 통한 로거 추가 및 로그 모니터링
+  - Jenkins 관리 > System Log > 모든 Jenkins 로그
+  - 신규 로그 출력기 등록
+    - 이름 : thinbackup
+    - Create 클릭
+    - Loggers > 추가
+      - thinbackup 으로 검색하여 hudson.plugins.thinbackup
+      - Log level : ALL
+      - 저장
+  - Jenkins 관리 > ThinBackup > Backup now 클릭
+  - Jenkins 관리 > System Log > thinbackup 이동
+    - 로그 확인
+    - Clear This Log 클릭
+    - Delete 클릭
+
+* 강제로 플러그인 오류 시뮬레이션 및 해결
+  - vi ~/.jenkins/jobs/pipeline-build/config.xml
+  - daysToKeep 을 검색하여 다음과 같이 변경
+
+     <daysToKeep-wrong>0</daysToKeep-wrong>
+
+  - 다음과 같이 엉뚱한 플러그인 설정 추가
+
+    <jenkins.model.BuildDiscarderProperty_wrong>
+        <strategy class="hudson.tasks.LogRotator">
+          <daysToKeep-wrong>0</daysToKeep-wrong>
+          <numToKeep>5</numToKeep>
+          <artifactDaysToKeep>-1</artifactDaysToKeep>
+          <artifactNumToKeep>-1</artifactNumToKeep>
+        </strategy>
+      </jenkins.model.BuildDiscarderProperty_wrong>
+
+  - 파일 저장후 Jenkins 재로딩
+    - Jenkins 관리 > Reload Configuration from Disk > 확인
+  - 읽을 수 없는 데이터 확인
+    - Jenkins 관리 > Manage Old Data
+    - 오류 내역 확인후, Discard Unreadable Data 클릭
+
+* 과거 jenkins 버전일 경우의 플러그인 오류 처리
+
+  - jenkins 홈으로 이동 하여 다음 샘플 수행
+    - BuildDiscarderProperty 오류 관찰시
+
+  grep -R --include="*.xml" "BuildDiscarderProperty" . | grep -v -e{/workflow/,/backup/,/branches/,/config-history/}
+
+  - 각 파일 방문하여 문제 해결후 jenkins 재시작
