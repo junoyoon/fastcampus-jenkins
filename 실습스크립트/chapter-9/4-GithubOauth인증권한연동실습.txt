@@ -1,0 +1,37 @@
+* Github App 추가
+  - https://github.com/settings/applications/new
+  - Application name : jenkins (사실 아무거나 가능)
+  - Homepage URL : http://example.com (사실 아무거나 가능)
+  - Authorization callback URL :
+    http://[jenkins-public-dns]:8080/securityRealm/finishLogin
+  - Register Application 클릭
+    - Client ID : **여기에 적어두세요**
+    - Client secrets : Generate a new client secret
+      - **여기에 적어두세요**
+
+* Github Authentication plugin 설치
+  - EC2 에서 VM 으로 설정한 jenkins 로 이동
+  - Github Authentication plugin 설치
+
+* Authentication 설정
+  - Jenkins 관리 > Security > Security Realm > Github Authentication Plugin 선택
+    - Client ID : 기록한ID 기록
+    - CLient Secret : 기록한 Secret 기록
+    - 저장
+  - 저장후 재로그인
+
+* Matrix-based Security 에 Groups 추가 가능 확인
+  - Jenkins 계정을 클릭하여, Groups 확인
+  - Jenkins 관리 > Security > Authorization > Matrix-based security
+    - Add groups 에 해당 그룹 추가 가능 확인
+  - 저장하지 않음
+
+* Authorization 설정
+  - Jenkins 관리 > Security > Authorization > Github Committer Authorization Strategy 선택
+    - Admin User Names : 본인 Github ID 입력
+    - Participant in Organization : organization 입력
+    - Use Github repository permission 체크
+    - 저장
+  - 저장후 재로그인
+
+* 이후 controller 은 사용되지 않으므로, 중지 / 종료 처리해도 됨.

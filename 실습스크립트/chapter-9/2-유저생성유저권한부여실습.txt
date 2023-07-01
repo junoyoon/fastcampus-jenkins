@@ -7,7 +7,7 @@
     - 이메일주소 : test1@example.com
   - 로그아웃후 로그인 확인
 
-* ldap 유저 연동
+* ldap 서버 연동
   - openldap example 띄우기
 
     docker run --detach --hostname openldap \
@@ -33,7 +33,7 @@
   - user1 / user1pw 로 로그인
   - Dashboard > 사람 확인
 
-* Matrix based security 설정
+* Project Matrix based security 설정
   - Jenkins관리 > Security > Authorization > Project Matrix based security
     - Add groups : readers
       - Overall Read 권한 부여

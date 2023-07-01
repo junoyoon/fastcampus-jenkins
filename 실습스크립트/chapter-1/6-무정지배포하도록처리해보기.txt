@@ -19,7 +19,7 @@
   - github 에 변경 생성하여 main 에 바로 커밋
   - 빌드 확인
 
-* 불필요한 docker 제거 - server_2 제외하고 모두 삭제
+* 불필요한 docker 제거 - server_1 제외하고 모두 삭제
   docker rm -f haproxy
   docker rm -f server_2
   docker rm -f cicd
