@@ -7,7 +7,7 @@
     - 이메일주소 : test1@example.com
   - 로그아웃후 로그인 확인
 
-* ldap 서버 연동
+* ldap 서버 구동 후 연동
   - openldap example 띄우기
 
     docker run --detach --hostname openldap \
