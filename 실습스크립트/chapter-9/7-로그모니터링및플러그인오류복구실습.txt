@@ -18,7 +18,7 @@
     - Clear This Log 클릭
     - Delete 클릭
 
-* 강제로 플러그인 오류 시뮬레이션 및 해결
+* 강제 플러그인 오류 재현 및 문제 해결
   - vi ~/.jenkins/jobs/pipeline-build/config.xml
   - daysToKeep 을 검색하여 다음과 같이 변경
 
