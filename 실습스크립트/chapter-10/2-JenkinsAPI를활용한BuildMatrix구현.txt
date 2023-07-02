@@ -1,0 +1,87 @@
+* api 샘플 어플리케이션 확인
+   - 로컬 jenkins 로드아웃
+
+   - 폴더 이동 및 초기 실행
+     cd ${gitrepo를 체크아웃받은 위치}/projects/jenkins-api-app
+
+     docker run --rm --name nginx -it \
+          --network practice \
+          -v ./nginx.conf:/etc/nginx/nginx.conf:ro \
+          -v .:/usr/share/nginx/html \
+          -p 8090:8080 \
+          nginx
+
+   - http://localhost:8090 확인
+     - 403 오류 확인
+
+* jenkins 키 발급 및 nginx 에 적용
+  - admin 로그인
+    - http://localhost:8080/user/admin/configure 로 이동후 토큰 발급
+    - Add new Token
+      - 생성된 토큰 저장
+  - 로그아웃
+  - 토큰을 base64로 변환
+
+    echo -n "admin:발급받은토큰" | base64
+
+  - 이를 사용하여 nginx.conf 의 다음 부분을 기록하고 커멘트 제거
+
+    proxy_set_header Authorization "Basic 여기에토큰입력";
+
+  - nginx 재시작
+  - http://localhost:8090/ 접근
+    - 데이터가 불충분함을 확인
+
+* api 변경
+    - 다음 URL 로 시도후 데이터가 불충분 함을 확인
+      - http://localhost:8090/api/json
+    - 다음 URL로 재시도하고 데이터 충분함을 확인
+      - http://localhost:8090/api/json?pretty=true&depth=1&tree=jobs[name,builds[number,result,timestamp,url],jobs[name,builds[number,result,timestamp,url]]]
+    - script.js 의 apiUrl 을 다음으로 변경
+      const apiUrl = "http://localhost:8090/api/json?pretty=true&depth=1&tree=jobs[name,builds[number,result,timestamp,url],jobs[name,builds[number,result,timestamp,url]]]"
+    - 이후 화면이 나오는 것을 확인
+      - 그러나 multibranch job 은 나오지 않음
+
+ * multibranch pipeline 관련 수정
+   - multibranch pipeline 은 json 구조가 다름을 확인 (job 내에 jobs 가 들어가 있음)
+     http://localhost:8090/api/json?pretty=true&depth=1&tree=jobs[name,builds[number,result,timestamp,url],jobs[name,builds[number,result,timestamp,url]]]
+   - script.js 에서 다음의 커멘트를 변경
+       //return []
+       return e.jobs.map(function(sub) {
+           sub.name = `${e.name}/${sub.name}`
+           return sub
+       })
+
+   - multibranch 도 나옴을 확인
+
+* 클릭시 빌드 페이지 오픈 오류 수정
+  - 빌드 클릭시 URL 오류가 발생하는 부분 확인
+  - 다음 로직의 커멘트 변경
+
+    // FIXME: 아래 로직 변경 필요
+    // let url = build.url
+    let url = jenkinsUrl + build.url.split('/').splice(3).join("/")
+
+  - 정상 동작 확인
+
+
+* jenkins userContent 로 서빙 실험
+
+  - 현재 파일을 모두 userContent 로 복사
+    - cp -rf * ~/.jenkins/userContent
+
+  - 다음에 접근하여 동작 확인 (jenkins 로그인 필요)
+    - http://localhost:8080/userContent/index.html
+
+  - Chrome 개발자 도구로 오류 확인 : Blocked... 에러 발생
+    - index.html 헤더에 다음이 리턴되는 것을 확인
+        X-Content-Security-Policy:
+        sandbox; default-src 'none'; img-src 'self'; style-src 'self'
+
+  - Jenkins CORS 해제
+    - Jenkins 관리 > Script Console 로 이동 하여 다음을 입력후 실행
+
+      System.setProperty("hudson.model.DirectoryBrowserSupport.CSP", "")
+
+  - 동작 확인
+    http://localhost:8080/userContent/index.html
