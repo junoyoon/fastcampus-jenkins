@@ -64,7 +64,7 @@
      docker cp jenkins:/var/jenkins_backup/FULL-2023-07-02_15-42 ~/.jenkins2
   - 신규 jenkins 실행
 
-    docker run -d -rm --name jenkins2 --hostname=jenkins2 \
+    docker run -d --name jenkins2 --hostname=jenkins2 \
                   --restart=on-failure \
                   -e TZ=Asia/Seoul \
                   -p 8081:8080 -p 50001:50000 \

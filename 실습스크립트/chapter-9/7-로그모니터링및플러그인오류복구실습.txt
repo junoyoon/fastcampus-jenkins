@@ -1,7 +1,7 @@
 * 로그 확인
   docker logs --since 1h -f jenkins
   - war 로 띄웠을때는 stdout 에 출력
-  - 그외 패키지로 띄웠을떄는 https://www.jenkins.io/doc/book/system-administration/viewing-logs/ 참고
+  - 그외 패키지로 띄웠을때는 https://www.jenkins.io/doc/book/system-administration/viewing-logs/ 참고
 
 * 웹을 통한 로거 추가 및 로그 모니터링
   - Jenkins 관리 > System Log > 모든 Jenkins 로그
