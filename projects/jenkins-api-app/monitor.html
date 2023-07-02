@@ -1,0 +1,91 @@
+<script src="js/vue.global.js"></script>
+<script src="js/axios.min.js"></script>
+
+
+<div id="app">
+    <table>
+        <thead>
+            <th>프로젝트</th>
+            <th v-for="date in dates" :key="date">
+                {{ date }}
+            </th>
+        </thead>
+        <tbody>
+            <tr v-for="job in jobs" :key="job">
+                <th>{{ job[0] }} </th>
+                <td v-for="build in job[1]" :key="build" :class="[build ? build.result : 'not-built']" @click="openBuild(build)">
+                    <span v-if="build" >
+                        {{ build.count }}
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="js/script.js"></script>
+<style>
+body {
+    padding:1.5em;
+    background: #f5f5f5
+}
+
+table {
+    border: 1px #a39485 solid;
+    font-size: .9em;
+    box-shadow: 0 2px 5px rgba(0,0,0,.25);
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+th {
+    text-align: left;
+}
+
+thead {
+    font-weight: bold;
+    color: #fff;
+    background: #73685d;
+}
+
+td, th {
+    padding: .5em .1em;
+    vertical-align: middle;
+    text-align: center;
+}
+
+td.SUCCESS, td.FAILURE, td.UNSTABLE {
+    cursor: pointer
+}
+td.SUCCESS {
+    color: white;
+    background-color: green;
+}
+
+td.FAILURE {
+    color: white;
+    background-color: red;
+}
+
+td.UNSTABLE {
+    color: yellow;
+    background-color: red;
+}
+
+
+th:first-child {
+    padding: .5em .5em;
+    min-width: 200px;
+}
+
+td {
+    border: 1px solid rgba(0,0,0,.1);
+    background: #fff;
+}
+
+a {
+    color: #73685d;
+}
+</style>
