@@ -8,7 +8,7 @@ var jenkinsUrl = "http://localhost:8080/"
    - 각빌드별 시간/결과/url
 */
 const apiUrl = "/api/json"
-//const apiUrl = "/api/json?pretty=true&depth=1&tree=jobs[name,builds[number,result,timestamp,url],jobs[name,builds[number,result,timestamp,url]]]"
+//const apiUrl = "/api/json?pretty=true&tree=jobs[name,builds[number,result,timestamp,url],jobs[name,builds[number,result,timestamp,url]]]"
 
 const { createApp, ref } = Vue
   createApp({
