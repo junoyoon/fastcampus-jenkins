@@ -1,5 +1,7 @@
+* 이번 실습은 로컬에 설치된 jenkins container 로 실행합니다.
+
 * api 샘플 어플리케이션 확인
-   - 로컬 jenkins 로드아웃
+   - 로컬 jenkins 로그아웃
 
    - 폴더 이동 및 초기 실행
      cd ${gitrepo를 체크아웃받은 위치}/projects/jenkins-api-app
@@ -12,17 +14,17 @@
           nginx
 
    - http://localhost:8090 확인
-     - 403 오류 확인
+     - ID/PW 요구 확인
 
 * jenkins 키 발급 및 nginx 에 적용
   - admin 로그인
     - http://localhost:8080/user/admin/configure 로 이동후 토큰 발급
     - Add new Token
-      - 생성된 토큰 저장
+      - 생성된 토큰 저장 113bd51b204c8f96c8333df7f2d38a8918
   - 로그아웃
   - 토큰을 base64로 변환
 
-    echo "admin:발급받은토큰" | base64
+    echo -n "admin:발급받은토큰" | base64
 
   - 이를 사용하여 nginx.conf 의 다음 부분을 기록하고 커멘트 제거
 
