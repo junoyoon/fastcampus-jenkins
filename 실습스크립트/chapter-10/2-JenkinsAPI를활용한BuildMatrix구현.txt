@@ -22,7 +22,7 @@
   - 로그아웃
   - 토큰을 base64로 변환
 
-    echo -n "admin:발급받은토큰" | base64
+    echo "admin:발급받은토큰" | base64
 
   - 이를 사용하여 nginx.conf 의 다음 부분을 기록하고 커멘트 제거
 
@@ -32,7 +32,7 @@
   - http://localhost:8090/ 접근
     - 데이터가 불충분함을 확인
 
-* api 변경
+* api 파라미터 변경
     - 다음 URL 로 시도후 데이터가 불충분 함을 확인
       - http://localhost:8090/api/json
     - 다음 URL로 재시도하고 데이터 충분함을 확인
