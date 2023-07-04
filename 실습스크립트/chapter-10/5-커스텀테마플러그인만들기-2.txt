@@ -1,4 +1,4 @@
-* 테스트 데이터 구축
+* 테스트 환경 구축
 
   - mvn hpi:run 상태에서 다음 플러그인 설치
     - pipeline
@@ -14,7 +14,7 @@
     - 해당 job 의 빌드후 조치추가> Record JaCoCo coverage report 추가
     - 이후 1회 빌드하여 그래프 출력 확인
 
-* 플러그인에 JobProperty 설정 추가
+* 플러그인에 JobProperty 확장 포인트 구현
 
   - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
     AdjustJacocoGraphProperty.java 을 my-plugin 의 동일한 폴더로 복제

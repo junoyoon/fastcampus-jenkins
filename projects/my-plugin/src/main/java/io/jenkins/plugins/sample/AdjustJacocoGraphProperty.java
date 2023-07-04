@@ -7,7 +7,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-public class AdjustJacocoGraphProperty extends JobProperty<Job<?, ?>> implements Action {
+public class AdjustJacocoGraphProperty extends JobProperty<Job<?, ?>> {
 
     private final int adjustJacocoGraphSize;
 
@@ -20,29 +20,9 @@ public class AdjustJacocoGraphProperty extends JobProperty<Job<?, ?>> implements
         return adjustJacocoGraphSize == 0 ? 200 : adjustJacocoGraphSize;
     }
 
-    @Override
-    public String getIconFileName() {
-        return null;
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "";
-    }
-
-    @Override
-    public String getUrlName() {
-        return null;
-    }
-
-    //@Symbol("adjustJacocoGraph")
+    // @Symbol("adjustJacocoGraph")
     @Extension
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-
-        @Override
-        public String getDisplayName() {
-            return "AdjustJacocoGraph";
-        }
 
         @Override
         public AdjustJacocoGraphProperty newInstance(StaplerRequest req, JSONObject formData)
@@ -58,5 +38,11 @@ public class AdjustJacocoGraphProperty extends JobProperty<Job<?, ?>> implements
 
             return (AdjustJacocoGraphProperty) super.newInstance(req, form);
         }
+
+        @Override
+        public String getDisplayName() {
+            return "AdjustJacocoGraph";
+        }
+
     }
 }

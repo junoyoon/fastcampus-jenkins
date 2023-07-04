@@ -1,9 +1,16 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <!-- jenkins 가 정의한 form 라이브러리 사용 -->
     <f:section title="Critical Job">
-        <f:entry field="regularExpression" title="Job Name Regular Expression">
+        <f:entry field="regularExpression"
+            title="Job Name Regular Expression">
             <f:textbox/>
         </f:entry>
     </f:section>
 </j:jelly>
+
+
+
+

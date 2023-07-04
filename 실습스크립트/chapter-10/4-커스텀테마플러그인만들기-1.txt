@@ -1,4 +1,4 @@
-* 환경 설정
+* 개발 환경 설정
   - jdk17 다운로드 & 설치
     - 이미 했을 것으로 예상되므로 skip
   - maven 다운로드
@@ -7,8 +7,8 @@
       다운로드 : https://maven.apache.org/download.cgi
       설치 : https://maven.apache.org/install.html
 
-* 프로젝트 skeleton 생성
-  - 프로젝트 생성
+* 플러그인 skeleton 생성
+  - 플러그인 생성
     mkdir ~/practice/; cd ~/practice
     mvn -U archetype:generate -Dfilter="io.jenkins.archetypes:"
 
@@ -44,6 +44,8 @@
     http://localhost:9090/jenkins
 
 * IntelliJ 설정
+  - IntelliJ 로 ~/practice/my-plugin 오픈
+
   - Run / Debug Configuration 에 mvn hpi:run 설정 추가
     - maven 선택
     - Run:  hpi:run 입력
@@ -57,8 +59,7 @@
     - menu > run > debugging action > Reload Changed classes 반응 확인
 
 
-* 플러그인에 글로벌 설정 추가
-
+* 플러그인에 글로벌 설정 확장 포인트 구현
 
   - my-plugin/test 폴더 이하 모두 삭제
   - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
@@ -78,7 +79,7 @@
   - Jenkins 관리 > System > Critical... 로 이동하여 다음과 같이 정규식 입력
     - production-.*
 
-* 플러그인에 페이지데코레이터 추가
+* 플러그인에 페이지데코레이터 확장 포인트 구현
 
   - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
     CriticalJobPageDecorator.java 을 my-plugin 의 동일한 폴더로 복제
