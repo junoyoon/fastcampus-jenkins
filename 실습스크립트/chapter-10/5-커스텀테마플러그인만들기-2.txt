@@ -1,0 +1,76 @@
+* 테스트 데이터 구축
+
+  - mvn hpi:run 상태에서 다음 플러그인 설치
+    - pipeline
+    - Pipeline: Stage View
+    - jacoco
+
+  - production-build job 수정
+    - Build Steps > Add Build step > Execute Shell 에 다음을 기록
+
+      # 기존 jenkins 설치본에서 사용했던 jacoco 테스트 결과를 현재 폴더로 복제
+      cp  ~/.jenkins/workspace/practice1-build/projects/spring-app/build/jacoco/test.exec ./
+
+    - 해당 job 의 빌드후 조치추가> Record JaCoCo coverage report 추가
+    - 이후 1회 빌드하여 그래프 출력 확인
+
+* 플러그인에 JobProperty 설정 추가
+
+  - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
+    AdjustJacocoGraphProperty.java 을 my-plugin 의 동일한 폴더로 복제
+
+  - projects/my-plugin/src/main/resources/io/jenkins/plugins/sample 내의
+    AdjustJacocoGraphProperty 폴더를 my-plugin 의 동일한 폴더로 복제 (폴더까지 복제)
+    - config.jelly, summary.jelly 파일이 복제됨
+
+  - 코드 확인
+
+* 디버깅을 통한 코드 동작 확인
+  - custom json 바인딩
+
+    - AdjustJacocoGraphProperty.DescriptorImpl#newInstance 메소드
+
+* 파이프라인 호환성 처리
+  - AdjustJacocoGraphProperty 내 다음 부분 커멘트 제거
+
+    @Symbol("adjustJacocoGraph")
+
+* 신규 파이프라인 생성후, 동작 확인
+  - name : production-pipeline-build
+  - type : pipeline
+    다음을 pipeline 에 입력
+
+pipeline {
+    agent any
+
+    options {
+        adjustJacocoGraph(300)
+    }
+    stages {
+        stage('Record Jacoco') {
+            steps {
+                sh "cp ~/.jenkins/workspace/practice1-build/projects/spring-app/build/jacoco/test.exec ./"
+                jacoco execPattern: '**/*.exec'
+            }
+        }
+    }
+}
+
+   - 이후 1회 빌드하여 그래프 출력 확인
+
+* 플러그인 패키징 및 업로드
+  - 패키징
+    - mvn package 실행
+    - target/my-plugin.hpi 생성 확인
+    - my-plugin.jpi 파일의 압축을 풀어 분석
+
+  - 설치
+    - http://localhost:8080 로 이동
+    - Jenkins 관리 > 플러그인 > Advanced Settings 로 이동
+      - Deploy Plugin 에 파일 업로드후 Deploy 클릭
+
+  - 정상 동작 여부 확인
+    - Jenkins 관리 > System > Critical ...
+      pipeline-.* 입력
+    - pipeline-build job 색상 확인 및 jacoco 사이즈 변경 설정 추가 등
+

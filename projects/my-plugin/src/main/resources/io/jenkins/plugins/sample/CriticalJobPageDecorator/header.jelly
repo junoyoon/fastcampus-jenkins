@@ -1,0 +1,6 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+   <link  href="${resURL}/plugin/my-plugin/critical-job.css" rel="stylesheet" type="text/css" />
+   <script src="${resURL}/plugin/my-plugin/critical-job.js"></script>
+   <script>enableCriticalView("${it.criticalJobRegularExpression}")</script>
+</j:jelly>

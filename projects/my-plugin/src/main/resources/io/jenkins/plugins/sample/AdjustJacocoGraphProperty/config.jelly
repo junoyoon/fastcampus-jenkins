@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
+  <f:optionalBlock name="adjust-jacoco-dynamic"
+    title="Enable jacoco graph adjustment"
+    checked="${instance != null}">
+    <f:entry title="Set jacoco graph size" field="adjustJacocoGraphSize">
+       <f:textbox/>
+    </f:entry>
+  </f:optionalBlock>
+
+</j:jelly>

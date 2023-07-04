@@ -1,0 +1,95 @@
+* 환경 설정
+  - jdk17 다운로드 & 설치
+    - 이미 했을 것으로 예상되므로 skip
+  - maven 다운로드
+    - mac : brew install maven
+    - 기타 시스템은 :
+      다운로드 : https://maven.apache.org/download.cgi
+      설치 : https://maven.apache.org/install.html
+
+* 프로젝트 skeleton 생성
+  - 프로젝트 생성
+    mkdir ~/practice/; cd ~/practice
+    mvn -U archetype:generate -Dfilter="io.jenkins.archetypes:"
+
+    - 선택할 프로젝트 타입에서 2번 선택
+      Choose a number or apply filter : 2
+      2: remote -> io.jenkins.archetypes:global-configuration-plugin (Skeleton of a Jenkins plugin with a POM and an example piece of global configuration.)
+
+    - 플러그인 버전 선택에서 14번 선택
+      Choose a number :  14
+      14: 1.14
+
+    - maven artifactID 를 my-plugin 입력
+      Define value for property 'artifactId' : my-plugin
+      Define value for property 'version' : 엔터
+      Y: 에서 엔터
+
+  - pom.xml 을 열고 name 부분을 My Plugin 으로 변경
+
+    <name>My Plugin</name>
+
+  - src/main/resources/index.jelly 를 수정하여 다음과 같이 변경
+
+    <?jelly escape-by-default='true'?>
+    <div>
+         fastcampus-jenkins 과정중 만든 플러그인 입니다. 만세!!
+    </div>
+
+  - 첫번째 빌드 및 실행
+    cd my-plugin
+    mvn hpi:run -Dport=9090
+
+  - 코드와 실행결과 비교
+    http://localhost:9090/jenkins
+
+* IntelliJ 설정
+  - Run / Debug Configuration 에 mvn hpi:run 설정 추가
+    - maven 선택
+    - Run:  hpi:run 입력
+    - Java Options > modify > Add VM 옵션 선택
+      - -Djetty.port=9090 입력
+    - OK 누름
+
+  - 디버깅 환경 확인
+    - 해당 my-plugin [hp:run] 이 선택된 채로 디버그 버튼 누름
+    - 브레이크 포인트 확인
+    - menu > run > debugging action > Reload Changed classes 반응 확인
+
+
+* 플러그인에 글로벌 설정 추가
+
+
+  - my-plugin/test 폴더 이하 모두 삭제
+  - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
+    CriticalJobConfiguration.java 을 my-plugin 의 동일한 폴더로 복제
+
+  - projects/my-plugin/src/main/resources/io/jenkins/plugins/sample 내의
+    CriticalJobConfiguration 폴더를 my-plugin 의 동일한 폴더로 복제
+
+    - config.jelly / help-regularExpression.html 파일이 복제됨
+  - 코드 확인
+  - mvn hpi:run 실행하여 동작 확인
+
+* 테스트 JOB 생성
+  - mvn hpi:run 실행중 다음 job 생성
+    - name : production-build
+    - type : FreeStyle
+  - Jenkins 관리 > System > Critical... 로 이동하여 다음과 같이 정규식 입력
+    - production-.*
+
+* 플러그인에 페이지데코레이터 추가
+
+  - projects/my-plugin/src/main/java/io/jenkins/plugins/sample 내의
+    CriticalJobPageDecorator.java 을 my-plugin 의 동일한 폴더로 복제
+
+  - projects/my-plugin/src/main/resources/io/jenkins/plugins/sample 내의
+    CriticalJobPageDecorator 폴더를 my-plugin 의 동일한 폴더로 복제
+    - header.jelly 파일이 복제됨
+
+  - projects/my-plugin/src/web-app 폴더를 my-plugin/src/ 내로 복제
+
+  - 코드 흐름 확인
+
+* 테스트 Job 확인
+  - 클릭하여 들어갔을때 header 가 잘 색상 전환 되는지 확인
