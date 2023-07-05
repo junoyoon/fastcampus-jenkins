@@ -1,5 +1,5 @@
 * 개발 환경 설정
-  - jdk17 다운로드 & 설치
+  - jdk11 또는 jdk17 다운로드 & 설치
     - 이미 했을 것으로 예상되므로 skip
   - maven 다운로드
     - mac : brew install maven
