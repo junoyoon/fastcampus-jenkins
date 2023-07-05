@@ -15,7 +15,7 @@ function enableCriticalView(criticalJobRegularExpression) {
         var jobName = split[jobIndex + 1]
         var re = new RegExp(criticalJobRegularExpression);
         if (re.test(jobName)) {
-            document.getElementById("page-header").classList.add("operation-job")
+            document.getElementById("header").classList.add("operation-job")
         }
     })
 }

@@ -60,7 +60,7 @@ pipeline {
 
 * 플러그인 패키징 및 업로드
   - 패키징
-    - mvn package 실행
+    - mvn clean package 실행
     - target/my-plugin.hpi 생성 확인
     - my-plugin.jpi 파일의 압축을 풀어 분석
 

@@ -1,2 +1,0 @@
-https://www.jenkins.io/doc/pipeline/steps/pipeline-input-step/#input-wait-for-interactive-input
-https://www.jenkins.io/doc/pipeline/steps/params/pipelinetriggers/

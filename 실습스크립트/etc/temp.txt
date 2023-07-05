@@ -1,4 +1,0 @@
-grep -R --include="*.xml" "BuildTrigger" . | grep -v -e{/workflow/,/branches/,/config-history/}
-docker logs jenkins
-
-jenkins upload
