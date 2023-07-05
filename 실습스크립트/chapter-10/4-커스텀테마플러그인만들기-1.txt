@@ -9,7 +9,7 @@
 
 * 플러그인 skeleton 생성
   - 플러그인 생성
-    mkdir ~/practice/; cd ~/practice
+    mkdir -p ~/practice/; cd ~/practice
     mvn -U archetype:generate -Dfilter="io.jenkins.archetypes:"
 
     - 선택할 프로젝트 타입에서 2번 선택
@@ -25,6 +25,8 @@
       Define value for property 'version' : 엔터
       Y: 에서 엔터
 
+    cd my-plugin
+
   - pom.xml 을 열고 name 부분을 My Plugin 으로 변경
 
     <name>My Plugin</name>
@@ -37,12 +39,13 @@
     </div>
 
   - 첫번째 빌드 및 실행
-    cd my-plugin
-    mvn hpi:run -Dport=9090
+
+    mvn hpi:run -Djetty.port=9090
 
   - 코드와 실행결과 비교
     http://localhost:9090/jenkins
 
+  - 실행 정지
 * IntelliJ 설정
   - IntelliJ 로 ~/practice/my-plugin 오픈
 
