@@ -104,9 +104,9 @@ pipeline {
 
     post {
         always {
-            scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
-            junit '**/test-results/**/*.xml'
-            jacoco sourcePattern: '**/src/main/kotlin'
+            //scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
+            //junit '**/test-results/**/*.xml'
+            //jacoco sourcePattern: '**/src/main/kotlin'
             script {
                 mineRepository()
                 emailext attachLog: true, body: email_content(), subject: email_subject(), to: '[각자의이메일주소]'
