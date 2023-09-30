@@ -4,7 +4,7 @@
   triggers {
         issueCommentTrigger('.*(test this|build this|deploy this).*')
   }
-
+ 
   - PR 에 커멘트 입력시 빌드 시작 여부 확인
 
 * PR Commit 메시지가 deploy this 일때 배포되도록 수정
