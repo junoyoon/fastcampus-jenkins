@@ -73,7 +73,7 @@ pipeline {
                 if (isNotificationNecessary()) {
                     mineRepository()
                     emailext attachLog: true, body: email_content(), subject: email_subject(), to: 'junoyoon@gmail.com'
-                    slackSend(channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}")
+                   // slackSend(channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}")
                 }
             }
         }
