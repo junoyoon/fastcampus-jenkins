@@ -43,4 +43,5 @@ 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
     - http://localhost:8080/user/admin/configure
     - Add new token
   - curl --user admin:토큰 "http://localhost:8080/job/practice1/build?token=build" 호출
+curl --user yeon:11370d4d12a694826e0e1a07c82262cd4c "http://192.168.56.101:8080/job/practice1/build?token=build"
   - 빌드 실행 확인
