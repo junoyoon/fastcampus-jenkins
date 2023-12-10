@@ -18,7 +18,7 @@
     - Note : jenkins 입력
     - repo / admin:repo_hook 선택
     - Generate token 이후 출력된 토큰 기재
-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
+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
 
   - Jenkins 관리 > System > Github Servers > Add Github Servers
     - Name : github
