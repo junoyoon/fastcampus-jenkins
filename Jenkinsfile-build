@@ -76,24 +76,6 @@ pipeline {
             }
         }
         
-        /*
-        * Jenkinsfile 을 Repo 에서 가져오도록 설정할 경우, 별도의 Checkout Stage 불필요.
-        * 다음 실습 마지막에 제거 예정
-        */
-        stage('Checkout') {
-            steps {
-                checkout scmGit(
-                        branches: [[name: "${params.BRANCH}"]],
-                        userRemoteConfigs: [[
-                            // credential id 는 http://localhost:8080/pipeline-syntax/ 에서 checkout step 생성을 통해 확인 가능
-                            credentialsId: 'github-ssh',
-                            url: 'git@github.com:gunwooyeon/fastcampus-jenkins.git']
-                        ],
-                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
-                )
-            }
-        }
-
         stage('Build') {
             steps {
               // dir 은 디렉토리 이동
