@@ -6,7 +6,7 @@ pipeline {
 
     environment {
         // jenkins 가 관리하는 도구의 위치는 이와 같이 환경 변수로 저장 가능
-        SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        // SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     triggers {
