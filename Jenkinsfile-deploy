@@ -9,6 +9,7 @@ pipeline {
         skipDefaultCheckout()
     }
 
+
     parameters {
         booleanParam defaultValue: false, description: '정말 배포를 하실건가요?', name: 'ARE_YOU_SURE'
         buildSelector defaultSelector: upstream(fallbackToLastSuccessful: true), description: '배포할 pipeline-build 빌드', name: 'BUILD_SELECTOR'
@@ -17,14 +18,14 @@ pipeline {
 
     // stages > stage > steps 순으로 구성
     stages {
-          stage("Checking Deployment") {
-              when {
-                  environment name: 'ARE_YOU_SURE', value: 'false'
-              }
-              steps {
-                  error('Executed mistakenly.')
-              }
-          }
+        stage("Checking Deployment") {
+            when {
+                environment name: 'ARE_YOU_SURE', value: 'false'
+            }
+            steps {
+                error('Executed mistakenly.')
+            }
+        }
 
         stage('Copying from upstream.') {
             steps {
@@ -32,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Send to target') {
+          stage('Send to target') {
             steps {
                 sshPublisher(
                         publishers: [
