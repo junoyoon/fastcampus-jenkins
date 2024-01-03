@@ -18,7 +18,7 @@ pipeline {
         // 빌드를 5개만 유지
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
         // github 프로젝트 설정
-        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/smathj/fastcampus-jenkins')
     }
 
 
@@ -104,7 +104,7 @@ pipeline {
             junit '**/test-results/**/*.xml'
             jacoco sourcePattern: '**/src/main/kotlin'
             mineRepository()
-            emailext attachLog: true, body: email_content(), subject: email_subject(), to: 'junoyoon@gmail.com'
+            emailext attachLog: true, body: email_content(), subject: email_subject(), to: 'smathj007@gmail.com'
             slackSend channel: "#jenkins", message: "${custom_msg(currentBuild.currentResult)}"
 
         }
