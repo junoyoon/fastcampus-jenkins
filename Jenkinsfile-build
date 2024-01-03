@@ -98,6 +98,9 @@ pipeline {
 
 /*
         stage('SonarScanner') {
+            when {
+                environment name: "GIT_BRANCH", value: "origin/main"
+            }
             steps {
                 // sonarqube 환경하에서, 실행
                 withSonarQubeEnv("sonarqube-server") {
