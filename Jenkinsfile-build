@@ -68,6 +68,7 @@ pipeline {
         * Jenkinsfile 을 Repo 에서 가져오도록 설정할 경우, 별도의 Checkout Stage 불필요.
         * 다음 실습 마지막에 제거 예정
         */
+/*
         stage('Checkout') {
             steps {
                 checkout scmGit(
@@ -82,7 +83,7 @@ pipeline {
                 )
             }
         }
-
+*/
         stage('Build') {
             steps {
               // dir 은 디렉토리 이동
