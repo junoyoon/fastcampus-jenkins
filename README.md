@@ -2,12 +2,4 @@
 # fastcampus-jenkins
  
     
- 
- 
-
-                    
- 
-  
- 
-   
-                  asdasdsd     
+ aaaaaaaaaaaaaaaaaaaaaa
