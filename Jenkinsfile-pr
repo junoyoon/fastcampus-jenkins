@@ -4,16 +4,19 @@ pipeline {
 
 
 
+
     options {
         // 빌드를 5개만 유지
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
         // github 프로젝트 설정
-        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/fastcampus-jenkins/fastcampus-jenkins')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/smathj/fastcampus-jenkins')
     }
+
 
 
     // stages > stage > steps 순으로 구성
     stages {
+        
         stage('Prepare') {
             steps {
                 // 어떤 환경변수가 주입되는지 확인
@@ -26,12 +29,12 @@ pipeline {
                                     // PR builder trigger
                                     [
                                             $class        : 'GhprbTrigger',
-                                            adminlist     : 'junoyoon',
+                                            adminlist     : 'smathj',
                                             cron: "*/15 * * * *",
                                             permitAll     : false,
                                             useGitHubHooks: true,
                                             triggerPhrase : '.*(test this|build this|deploy this).*',
-                                            gitHubAuthId  : '0e0e7b1f-09c0-4380-bf6c-c07409bd9f99', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
+                                            gitHubAuthId  : 'e351df9c-0f32-459f-93c1-6e06c63a5e58', // Jenkins 설정 > System >  GitHub Pull Request Builder > Auth ID 에서 확인 가능
                                             extensions    : [
                                                     [
                                                             $class             : 'GhprbSimpleStatus',
@@ -45,7 +48,6 @@ pipeline {
                 }
             }
         }
-       
 
         stage('Build') {
             steps {
@@ -67,22 +69,22 @@ pipeline {
             scanForIssues tool: ktLint(pattern: '**/ktlint/**/*.xml')
             junit '**/test-results/**/*.xml'
             jacoco sourcePattern: '**/src/main/kotlin'
+
         }
 
         success {
             script {
-                script {
-                        if ((env.ghprbCommentBody ?: "").contains("deploy this")) {
-                            archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
-                            build(
-                                   job: 'pipeline-deploy',
-                                   parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
-                                   wait: false,
-                                   propagate: false
-                            )
-                        }
-                    }
+                if ((env.ghprbCommentBody ?: "").contains("deploy this")) {
+                    archiveArtifacts artifacts: 'projects/spring-app/build/libs/*-SNAPSHOT.jar'
+                    build(
+                           job: 'pipeline-deploy',
+                           parameters: [booleanParam(name: 'ARE_YOU_SURE', value: "true")],
+                           wait: false,
+                           propagate: false
+                    )
+                }
             }
         }
     }
 }
+
