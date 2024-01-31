@@ -3,8 +3,8 @@
 
 * cicd container 로 접근후 해당 repo 를 clone
 
-    docker exec -it cicd bash
     cd ~
+    docker exec -it cicd bash
     git clone https://github.com/highsky1/fastcampus-jenkins.git
     cd fastcampus-jenkins
     ls -al
