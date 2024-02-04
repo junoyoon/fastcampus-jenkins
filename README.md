@@ -1,2 +1,2 @@
 # fastcampus-jenkins
-# fastcampus-jenkins
+# highsky-jenkins
