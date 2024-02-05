@@ -5,6 +5,7 @@ echo "-----------------"
 echo "기존 프로세스를 죽임"
 echo "-----------------"
 ps -eaf | grep -v grep | grep -v defunct | grep java |  awk '{print "kill -TERM "\$2}' | sh -x
+sleep 10
 
 echo "-----------------"
 echo "신규 버전 실행"
