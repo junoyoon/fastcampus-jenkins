@@ -14,6 +14,7 @@
   - 빌드후 조치 > Record JaCoCo coverage report 추가
     - Path to source directories 의 **/src/main/java 를 **/src/main/kotlin 로 변경
   - 빌드후 커버리지 출력 결과 확인
+    : 소스 코드가 어떤 건 실행되었고, 어떤 건 실행되지 않았음을 표시 해줌
 
 * 정적분석 가시화 추가
   - Warnings Next Generation 플러그인 추가
