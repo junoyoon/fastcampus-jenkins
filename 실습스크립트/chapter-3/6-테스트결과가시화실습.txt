@@ -7,7 +7,7 @@
 
 * 테스트 커버리지 가시화 추가
   - Jacoco 플러그인 추가
-  - github 에 가서 projects/spring-app/build.gradle 파일을 수정하여
+  - github 에 가서 projects/spring-app/build.gradle.kts 파일을 수정하여
     // jacoco 라는 부분을 uncomment
   - 빌드후 조치 > Record JaCoCo coverage report 추가
     - Path to source directories 의 **/src/main/java 를 **/src/main/kotlin 로 변경
