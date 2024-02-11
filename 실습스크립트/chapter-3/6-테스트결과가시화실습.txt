@@ -18,11 +18,12 @@
 
 * 정적분석 가시화 추가
   - Warnings Next Generation 플러그인 추가
+    : 이것을 사용해서 kotlin을 통해 작성된 코드 스타일이 잘못된 것이 있는지를 확인하는 플러그인
   - github 에 가서 projects/spring-app/build.gradle 파일을 수정하여
     // import org.jlleitschuh.gradle.ktlint.reporter.ReporterType 와
     // configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> 이후를 uncomment
   - 빌드후 조치 > Record compiler warnings and static analysis results 추가
-    - Tool : ktlint
+    - Tool : ktlint (kotlin에서 쓰는 정적 코드분석 도구)
     - Report File Pattern : **/reports/ktlint/**/*.xml
     - 고급 > Enable recording for failed build 추가
   - 빌드후 정적분석 결과 확인
