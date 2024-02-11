@@ -19,6 +19,8 @@
 * 정적분석 가시화 추가
   - Warnings Next Generation 플러그인 추가
     : 이것을 사용해서 kotlin을 통해 작성된 코드 스타일이 잘못된 것이 있는지를 확인하는 플러그인
+    : 위 플러그인으로는 검색 안됨. Warnings 로 검색하고 이것을 추가하면 됨
+    : 플러그인 추가후 아래 나오는 설정과정이 동일한 것으로 봐서 이름 변경이 된듯 함
   - github 에 가서 projects/spring-app/build.gradle 파일을 수정하여
     // import org.jlleitschuh.gradle.ktlint.reporter.ReporterType 와
     // configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> 이후를 uncomment
