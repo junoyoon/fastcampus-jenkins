@@ -64,7 +64,8 @@
 위에 trigger 발생 시 인지하는 부분에서
 1. 텍스트
 2. Environment Variables (https://plugins.jenkins.io/ghprb/#plugin-content-environment-variables)
-3. 2번의 단순한 인자값을 받는 것 대신에 정규식 사용하기
+3. 2번의 단순한 인자값을 받는 것 대신에 조건문 사용하기
+  -> 조건문을 사용해서 처리하려고 했으나 안됨. 다음 사항 무시.
 Build Steps > Excute shell
 ---
 if [ $ghprbCommentBody == "deploy this" ]
