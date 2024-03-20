@@ -56,20 +56,6 @@ pipeline {
             }
         }        
         
-        stage('Checkout') {
-            steps {
-                checkout scmGit(
-                        branches: [[name: "${params.BRANCH}"]],
-                        userRemoteConfigs: [[
-                            // credential id 는 http://localhost:8080/pipeline-syntax/ 에서 checkout step 생성을 통해 확인 가능
-                            credentialsId: 'github-ssh',
-                            url: 'git@github.com:highsky1/highsky-jenkins.git']
-                        ],
-                        extensions: [[$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'projects/spring-app']]]]
-                )
-            }
-        }
-
         stage('Build') {
             steps {
               // dir 은 디렉토리 이동
@@ -83,6 +69,9 @@ pipeline {
         }
 
         stage('SonarScanner') {
+            when {
+                environment name: "GIT_BRANCH", value: "origin/main"
+            }
             steps {
                 // sonarqube 환경하에서, 실행
                 withSonarQubeEnv("sonarqube-server") {
