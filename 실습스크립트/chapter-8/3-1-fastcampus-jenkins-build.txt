@@ -1,9 +1,9 @@
 //
 // 다음을 교체 바람
-// - [각자의github계정]
-// - "여기에 PR서버 DNS 입력"
-// - "여기에 DEV서버 DNS 입력"
-// - "여기에 QA서버 DNS 입력"
+// - kong-sj
+// - "여기에 PR서버 DNS 입력" 192.168.0.102
+// - "여기에 DEV서버 DNS 입력" 192.168.0.57
+// - "여기에 QA서버 DNS 입력" 192.168.0.40
 //
 pipeline {
     // kubernetes gradle template 과 kaniko template 을 합성
@@ -16,9 +16,9 @@ pipeline {
     environment {
         // jenkins 가 관리하는 도구의 위치는 이와 같이 환경 변수로 저장 가능
         // SONAR_SCANNER_HOME = tool name: 'sonar-scanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-        TARGET_SERVER_PR = "여기에 PR서버 DNS 입력"
-        TARGET_SERVER_DEV = "여기에 DEV서버 DNS 입력"
-        TARGET_SERVER_QA = "여기에 QA서버 DNS 입력"
+        TARGET_SERVER_PR = "192.168.0.102"
+        TARGET_SERVER_DEV = "192.168.0.57"
+        TARGET_SERVER_QA = "192.168.0.40"
         // gradle cache 저장 위치를 공유 볼륨 하위로 이동
         GRADLE_USER_HOME = "/volumes/gradle-cache-fastcampus-jenkins"
     }
@@ -30,7 +30,7 @@ pipeline {
 
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '5', numToKeepStr: '5')
-        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/[각자의github계정]/fastcampus-jenkins')
+        githubProjectProperty(displayName: '', projectUrlStr: 'https://github.com/kongkong-dev/hsj-ci-cd.git')
         copyArtifactPermission('*')
     }
 
@@ -143,18 +143,18 @@ pipeline {
                     echo "deploy to $targetServer"
 
                     withEnv(["TARGET_SERVER=$targetServer"]) {
-                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user-ssh', keyFileVariable: 'IDENTITY', passphraseVariable: '', usernameVariable: 'userName')]) {
+                        withCredentials([sshUserPrivateKey(credentialsId: 'server-user-ssh', keyFileVariable: 'IDENTITY', passphraseVariable: '', usernameVariable: 'userName')]) {
                             // 파일 카피
                             sh '''
                                 scp -o StrictHostKeychecking=no -i $IDENTITY \
                                        deploy/* \
-                                       ec2-user@$TARGET_SERVER:~
+                                       ubuntu@$TARGET_SERVER:~
                                 '''
                             echo "copied"
                             // 재시작 스크립트 구동
                             sh '''
                                 ssh -o StrictHostKeychecking=no -tt -i $IDENTITY \
-                                    ec2-user@$TARGET_SERVER \
+                                    ubuntu@$TARGET_SERVER \
                                     "sh -c './deploy.sh --application.branch=$BRANCH_NAME --application.git-commit=$GIT_COMMIT' "
                                '''
                             echo "deployed"

@@ -118,7 +118,7 @@ EOF
 # 토큰 확인 및 복사
 kubectl describe secret jenkins-secret
 
-Token : **여기에 기록해 두세요**
+Token : eyJhbGciOiJSUzI1NiIsImtpZCI6IlJWQWs0X19ObFJOOU1JQkdtS1hvUUlwVEFSbXlmalFWczFJUnlmS3d5UDQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImplbmtpbnMtc2VjcmV0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImplbmtpbnMiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiI2N2E0YWFiNS0zNjEwLTQwMGUtOTZjOS1iMDBkM2RmYWU2OWEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpqZW5raW5zIn0.xgp6vXN4uP5TN19WJmTMqwFsMIOr45WzDK000UJFOdBopGf-DMp7_Cc6OAT9citVkrLIGu5WScOhWhdOvGtOwxyXpZhuNORFByR497Rwzd91Pz2Dbp0Wt_PTPLX1sOWqGqzuoT-81t9L9VDss0DaeqyYLL8D_jBf5I3PYP4l-32psysU-5gDMdhN0ZyW25iSCF2aG-cPRZFIIf_YqUTanHmukIMcHWSfNajl6CL4YQn0CEMcL2s0aG7-IztiR_YcDkmpyIYdrzufu2TTU9Cssk1tBFZRgP1GvLItsL2qMf71-PxwugCjZOqBiDCbVSZ34DMsIOnIu2FwsOlQRTKRFw
 
 ************************************************************************
 * jenkins-target-* 서버 설정 (모든 서버에 적용 필요)
