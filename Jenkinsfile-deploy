@@ -17,14 +17,14 @@ pipeline {
 
     // stages > stage > steps 순으로 구성
     stages {
-          stage("Checking Deployment") {
-              when {
-                  environment name: 'ARE_YOU_SURE', value: 'false'
-              }
-              steps {
-                  error('Executed mistakenly.')
-              }
-          }
+        stage("Checking Deployment") {
+            when {
+                environment name: 'ARE_YOU_SURE', value: 'false'
+            }
+            steps {
+                error('Executed mistakenly.')
+            }
+        }
 
         stage('Copying from upstream.') {
             steps {
